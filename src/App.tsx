@@ -16,6 +16,7 @@ export function App() {
   const [shares, setShares] = useState<Track[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [browsingUser, setBrowsingUser] = useState<string | null>(null);
+  const [broadcastStream, setBroadcastStream] = useState<MediaStream | null>(null);
 
   // Search across local shares and Freenet peer announcements
   const handleSearch = (query: string) => {
@@ -234,6 +235,7 @@ export function App() {
             }}
             currentPlayingTrack={currentTrack}
             isPlaying={isPlaying}
+            broadcastStream={broadcastStream}
           />
         )}
       </main>
@@ -257,6 +259,7 @@ export function App() {
             setCurrentTrack(shares[idx - 1]);
           }
         }}
+        onBroadcastStreamReady={setBroadcastStream}
       />
 
       {/* Browse User Shares Modal */}

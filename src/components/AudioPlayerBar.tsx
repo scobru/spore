@@ -9,6 +9,9 @@ interface AudioPlayerBarProps {
   onTogglePlay: () => void;
   onNext?: () => void;
   onPrev?: () => void;
+  /** Fires once with a MediaStream that always carries whatever this player is currently playing
+   *  (survives track changes), for Spore Radio to hand to a listener's RTCPeerConnection. */
+  onBroadcastStreamReady?: (stream: MediaStream) => void;
 }
 
 export const AudioPlayerBar: FC<AudioPlayerBarProps> = ({
@@ -17,12 +20,31 @@ export const AudioPlayerBar: FC<AudioPlayerBarProps> = ({
   onTogglePlay,
   onNext,
   onPrev,
+  onBroadcastStreamReady,
 }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(85);
   const [isMuted, setIsMuted] = useState(false);
+
+  // Route the <audio> element through the Web Audio API once, so we can tap a stable MediaStream of
+  // whatever it plays (for broadcasting) while it keeps playing locally through the same graph.
+  // shortcut: never torn down (one player bar lives for the app's whole session) — an HTMLMediaElement
+  // can only ever be wrapped in one MediaElementSourceNode, which React 18 StrictMode's double-invoked
+  // effect would violate on the second run if this tried to create and close one per mount.
+  const broadcastWired = useRef(false);
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !onBroadcastStreamReady || broadcastWired.current) return;
+    broadcastWired.current = true;
+    const ctx = new AudioContext();
+    const source = ctx.createMediaElementSource(audio);
+    const destination = ctx.createMediaStreamDestination();
+    source.connect(destination);
+    source.connect(ctx.destination); // keep local playback audible
+    onBroadcastStreamReady(destination.stream);
+  }, []);
 
   // Sync audio source
   useEffect(() => {
