@@ -37,7 +37,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "category": "Audio",
+    "category": "Music",
     "shortDescription": "Sovereign P2P music client and library digging on Freenet",
     "longDescription": "Spore is a sovereign, lightweight P2P music streaming and sharing client for the Freenet network, inspired by Soulseek and eMule.",
     "copyright": "Copyright (c) 2026 Spore Community",
