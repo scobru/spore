@@ -21,7 +21,9 @@ export const SearchView: FC<SearchViewProps> = ({
   const [filterFormat, setFilterFormat] = useState('ALL');
   const [downloadedIds, setDownloadedIds] = useState<Set<string>>(new Set());
 
-  const formats = ['ALL', 'FLAC', 'MP3', 'WAV', 'OGG'];
+  const formats = ['ALL', 'FLAC', 'MP3', 'WAV', 'EXTRAS'];
+
+  const extraFormats = ['JPG', 'JPEG', 'PNG', 'WEBP', 'PDF', 'CUE', 'LOG', 'NFO', 'TXT'];
 
   const filteredResults = results.filter((res) => {
     const matchesQuery =
@@ -31,7 +33,11 @@ export const SearchView: FC<SearchViewProps> = ({
       res.track.album.toLowerCase().includes(query.toLowerCase()) ||
       res.peerUser.toLowerCase().includes(query.toLowerCase());
 
-    const matchesFormat = filterFormat === 'ALL' || res.track.format.toUpperCase() === filterFormat;
+    const isExtra = extraFormats.includes(res.track.format.toUpperCase());
+    const matchesFormat =
+      filterFormat === 'ALL' ||
+      (filterFormat === 'EXTRAS' ? isExtra : res.track.format.toUpperCase() === filterFormat);
+
     return matchesQuery && matchesFormat;
   });
 
@@ -179,7 +185,11 @@ export const SearchView: FC<SearchViewProps> = ({
                         className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                           res.track.format === 'FLAC'
                             ? 'bg-amber-950/80 text-amber-400 border border-amber-800/60'
-                            : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60'
+                            : res.track.format === 'MP3'
+                            ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60'
+                            : extraFormats.includes(res.track.format)
+                            ? 'bg-purple-950/80 text-purple-300 border border-purple-800/60'
+                            : 'bg-cyan-950/80 text-cyan-400 border border-cyan-800/60'
                         }`}
                       >
                         {res.track.format}

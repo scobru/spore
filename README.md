@@ -29,7 +29,7 @@ Traditional P2P clients either rely on centralized indexing servers (like origin
 
 ### 1. 🔍 High-Density Search (Soulseek Style)
 - Multi-column data view: **Title, Artist, Album, Format, Bitrate, Duration, File Size, Peer, Free Slots, and Speed**.
-- Live filters for formats: `ALL`, `FLAC`, `MP3`, `WAV`, `OGG`.
+- Live filters for formats: `ALL`, `FLAC`, `MP3`, `WAV`, `EXTRAS` (artwork, booklets, cue logs).
 - Instant search across connected peer libraries and locally indexed files.
 - Double-click to queue downloads immediately.
 
@@ -51,6 +51,22 @@ Traditional P2P clients either rely on centralized indexing servers (like origin
 ### 5. 🎵 Integrated Hi-Fi Audio Player
 - Docked bottom bar with waveform scrubbing, time remaining, volume control, and codec badge (`FLAC 24-bit`, `MP3 320k`).
 - Native streaming of local files directly from disk via Tauri's secured **Asset Protocol**.
+
+### 6. ✏️ Native Tag Editor (ID3 / Vorbis)
+- In-place metadata editing powered by Rust `lofty`: rename Title, Artist, Album, Genre, and Year directly on disk.
+- Instant BLAKE3 rehashing upon saving to guarantee content-addressing integrity across peers.
+
+---
+
+## 🎼 Curated Scope: Music & Release Extras Only
+
+To prevent malware injection, trojans (`.exe`, `.scr`, `.bat`), and junk bloat that plagued legacy P2P networks, Spore enforces a strict **Music & Release Extras Only** policy:
+
+* **🎶 Lossless & Hi-Fi Audio:** `.flac`, `.wav`, `.aiff`, `.m4a` (ALAC/AAC), `.ogg` (Vorbis), `.opus`, `.mp3`.
+* **🖼️ Cover Art & Packaging:** `.jpg`, `.jpeg`, `.png`, `.webp`.
+* **📖 Booklets, Liner Notes & Zines:** `.pdf`, `.txt`, `.nfo`.
+* **💿 Accurate Rip Logs & Track Sheets:** `.cue`, `.log` (EAC / Whipper rip verification).
+* 🚫 **All Executables & Arbitrary Binaries Blocked:** Spore completely rejects and ignores executable binaries, installers, and system scripts.
 
 ---
 

@@ -168,45 +168,66 @@ export const MySharesView: FC<MySharesViewProps> = ({
                 </td>
               </tr>
             ) : (
-              shares.map((track, i) => (
-                <tr key={i} className="hover:bg-neutral-900/40 group">
-                  <td className="py-1.5 px-3 text-center">
-                    <button
-                      onClick={() => onPlayTrack(track)}
-                      className="text-neutral-500 hover:text-emerald-400 transition-colors cursor-pointer"
-                      title="Play track locally"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-current" />
-                    </button>
-                  </td>
-                  <td className="py-1.5 px-3 font-sans text-neutral-200 truncate max-w-xs">{track.title}</td>
-                  <td className="py-1.5 px-3 font-sans text-neutral-400 truncate">{track.artist}</td>
-                  <td className="py-1.5 px-3 text-neutral-400 truncate">{track.album}</td>
-                  <td className="py-1.5 px-2 text-center">
-                    <span className="px-1.5 py-0.5 rounded text-[10px] bg-neutral-800 text-neutral-300 font-bold">
-                      {track.format}
-                    </span>
-                  </td>
-                  <td className="py-1.5 px-2 text-right text-neutral-400">
-                    {track.bitrate_kbps ? `${track.bitrate_kbps}k` : '--'}
-                  </td>
-                  <td className="py-1.5 px-2 text-right text-neutral-300">
-                    {(track.size_bytes / (1024 * 1024)).toFixed(1)} MB
-                  </td>
-                  <td className="py-1.5 px-3 text-neutral-500 text-[10px] truncate max-w-[130px]" title={track.blake3_hash}>
-                    {track.blake3_hash ? `${track.blake3_hash.slice(0, 10)}...` : '--'}
-                  </td>
-                  <td className="py-1.5 px-3 text-center">
-                    <button
-                      onClick={() => setEditingTrack(track)}
-                      className="p-1 rounded bg-neutral-800 hover:bg-emerald-600 hover:text-neutral-950 text-neutral-400 hover:text-neutral-950 transition-colors cursor-pointer"
-                      title="Edit ID3 / Vorbis tags on disk"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  </td>
-                </tr>
-              ))
+              shares.map((track, i) => {
+                const isAudio = ['MP3', 'FLAC', 'WAV', 'OGG', 'OPUS', 'M4A', 'AAC', 'AIFF'].includes(track.format.toUpperCase());
+                return (
+                  <tr key={i} className="hover:bg-neutral-900/40 group">
+                    <td className="py-1.5 px-3 text-center">
+                      {isAudio ? (
+                        <button
+                          onClick={() => onPlayTrack(track)}
+                          className="text-neutral-500 hover:text-emerald-400 transition-colors cursor-pointer"
+                          title="Play track locally"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                        </button>
+                      ) : (
+                        <span className="text-neutral-600 text-[10px]">•</span>
+                      )}
+                    </td>
+                    <td className="py-1.5 px-3 font-sans text-neutral-200 truncate max-w-xs">{track.title}</td>
+                    <td className="py-1.5 px-3 font-sans text-neutral-400 truncate">{track.artist}</td>
+                    <td className="py-1.5 px-3 text-neutral-400 truncate">{track.album}</td>
+                    <td className="py-1.5 px-2 text-center">
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                          track.format === 'FLAC'
+                            ? 'bg-amber-950/80 text-amber-400 border border-amber-800/60'
+                            : track.format === 'MP3'
+                            ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60'
+                            : isAudio
+                            ? 'bg-cyan-950/80 text-cyan-400 border border-cyan-800/60'
+                            : 'bg-purple-950/80 text-purple-300 border border-purple-800/60'
+                        }`}
+                      >
+                        {track.format}
+                      </span>
+                    </td>
+                    <td className="py-1.5 px-2 text-right text-neutral-400">
+                      {track.bitrate_kbps ? `${track.bitrate_kbps}k` : '--'}
+                    </td>
+                    <td className="py-1.5 px-2 text-right text-neutral-300">
+                      {(track.size_bytes / (1024 * 1024)).toFixed(1)} MB
+                    </td>
+                    <td className="py-1.5 px-3 text-neutral-500 text-[10px] truncate max-w-[130px]" title={track.blake3_hash}>
+                      {track.blake3_hash ? `${track.blake3_hash.slice(0, 10)}...` : '--'}
+                    </td>
+                    <td className="py-1.5 px-3 text-center">
+                      {isAudio ? (
+                        <button
+                          onClick={() => setEditingTrack(track)}
+                          className="p-1 rounded bg-neutral-800 hover:bg-emerald-600 hover:text-neutral-950 text-neutral-400 hover:text-neutral-950 transition-colors cursor-pointer"
+                          title="Edit ID3 / Vorbis tags on disk"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                      ) : (
+                        <span className="text-neutral-600 text-[10px]" title="Extra (read-only)">--</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
