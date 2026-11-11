@@ -146,6 +146,26 @@ spore/
 
 ---
 
+## ⚖️ Content Policy & Copyright Notice
+
+> [!IMPORTANT]
+> **Spore is strictly intended for sharing non-copyright-infringing, royalty-free, and legally authorized content.**
+
+Spore is built as a decentralized, neutral communication protocol and file management client. In alignment with open culture and legal compliance:
+
+- **Permitted & Encouraged Content**:
+  - **Public Domain Works**: Historical audio, archival recordings, and media whose copyright has expired or was dedicated to the public domain.
+  - **Creative Commons & Open Licenses**: Music, samples, and audio published under permissive licenses (e.g., CC0, CC-BY, CC-SA).
+  - **Independent & Self-Produced Audio**: Original music, field recordings, sample packs, synthesizer patches, and productions shared directly by their creators.
+  - **Authorized Live Recordings**: Live bootlegs, DJ mixes, and tape recordings distributed with the consent of the respective artists and labels.
+- **Prohibited Use**:
+  - **Do NOT** use Spore to index, distribute, or download commercial copyrighted music, proprietary digital assets, or media protected by copyright without the explicit permission or license of the rights holder.
+- **User Responsibility**:
+  - Spore operates over a serverless peer-to-peer network with no central authority, indexing server, or content gatekeeper. Each user bears sole and exclusive legal responsibility for the material they decide to index, announce, upload, or download.
+  - The creators and maintainers of Spore do not endorse, encourage, or tolerate copyright infringement.
+
+---
+
 ## 📄 License
 
 Released under the [MIT License](LICENSE).

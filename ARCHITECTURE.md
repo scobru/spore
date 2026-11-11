@@ -153,3 +153,24 @@ Spore separates **Catalog Discovery** from **Data Transfer** to maintain high sp
    The scanner in `scanner.rs` strictly performs read operations (`File::open`) during directory inspection. It never modifies, renames, or writes to shared source files.
 3. **End-to-End Cryptography:**
    Transfers negotiated via Freehole use **AES-256-GCM** authenticated encryption with ephemeral keys.
+
+---
+
+## 6. Content Policy & Copyright Compliance Architecture
+
+Spore is architected strictly as an open, neutral, decentralized protocol designed for lawful file sharing and independent cultural archiving.
+
+### 6.1 Authorized Content Scope
+Spore is built to exchange and index:
+- **Public Domain Audio:** Archival recordings, historic musical works, audiobooks, and historical audio documents whose statutory copyright term has expired or which have been dedicated to the public domain.
+- **Permissively Licensed Works (Creative Commons):** Works released under CC0, CC-BY, CC-BY-SA, or open audio licenses.
+- **Creator-Distributed Media:** Original productions, sample libraries, modular synthesizer recordings, field recordings, and tracks published directly by artists, bands, or labels seeking sovereign distribution without middleman platforms.
+- **Authorized Bootlegs & Field Tapes:** Live performance recordings, community DJ sets, and demos shared in accordance with artist permissions.
+
+### 6.2 Strict Prohibition of Infringing Material
+Spore must **not** be used for the unauthorized reproduction, distribution, or acquisition of copyrighted music, commercial discographies, proprietary software, or any materials protected by copyright law without the explicit permission or license from the rights holder.
+
+### 6.3 Decentralized Architecture & User Responsibility
+- **No Central Index or Gatekeeper:** Spore does not run any central servers, cloud indexing databases, or hosted file clusters. Content discovery is conducted purely over distributed Freenet state contracts and peer-to-peer announcements.
+- **Sovereign User Liability:** Each network participant maintains full autonomy and sole legal responsibility for the directories they index, announce, upload, or download.
+- **Developer Stance:** The maintainers, authors, and contributors of Spore do not host, curate, or endorse any user-transferred content and strictly disclaim liability for any unlawful or infringing use of the software.
