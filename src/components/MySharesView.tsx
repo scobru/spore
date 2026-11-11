@@ -1,7 +1,8 @@
 import { useState, FC } from 'react';
-import { Folder, FolderCheck, RefreshCw, HardDrive, Music, Disc, Hash, Globe2, Play } from 'lucide-react';
+import { Folder, FolderCheck, RefreshCw, HardDrive, Music, Disc, Hash, Globe2, Play, Pencil } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { Track } from '../types';
+import { EditTagsModal } from './EditTagsModal';
 
 interface MySharesViewProps {
   shares: Track[];
@@ -18,6 +19,7 @@ export const MySharesView: FC<MySharesViewProps> = ({
   const [isScanning, setIsScanning] = useState(false);
   const [scanMessage, setScanMessage] = useState('');
   const [publishedToFreenet, setPublishedToFreenet] = useState(false);
+  const [editingTrack, setEditingTrack] = useState<Track | null>(null);
 
   const handleScan = async () => {
     if (!folderPath) return;
@@ -35,6 +37,12 @@ export const MySharesView: FC<MySharesViewProps> = ({
     } finally {
       setIsScanning(false);
     }
+  };
+
+  const handleTrackUpdated = (updatedTrack: Track) => {
+    const updatedList = shares.map((t) => (t.path === updatedTrack.path ? updatedTrack : t));
+    onSetShares(updatedList);
+    setScanMessage(`Updated metadata & rehashed: ${updatedTrack.artist} — ${updatedTrack.title}`);
   };
 
   const totalBytes = shares.reduce((acc, t) => acc + t.size_bytes, 0);
@@ -91,8 +99,9 @@ export const MySharesView: FC<MySharesViewProps> = ({
       </div>
 
       {scanMessage && (
-        <div className="px-4 py-1.5 bg-emerald-950/40 border-b border-emerald-900/50 text-[11px] text-emerald-400">
-          {scanMessage}
+        <div className="px-4 py-1.5 bg-emerald-950/40 border-b border-emerald-900/50 text-[11px] text-emerald-400 flex items-center justify-between">
+          <span>{scanMessage}</span>
+          <button onClick={() => setScanMessage('')} className="text-emerald-600 hover:text-emerald-300">✕</button>
         </div>
       )}
 
@@ -137,7 +146,7 @@ export const MySharesView: FC<MySharesViewProps> = ({
 
       {/* Local Tracklist Table */}
       <div className="flex-1 overflow-auto">
-        <table className="w-full text-left border-collapse text-xs">
+        <table className="w-full text-left border-collapse text-xs select-none">
           <thead className="bg-neutral-900 sticky top-0 border-b border-neutral-800 text-[11px] text-neutral-400 uppercase tracking-wider z-10">
             <tr>
               <th className="py-2 px-3 w-8"></th>
@@ -147,13 +156,14 @@ export const MySharesView: FC<MySharesViewProps> = ({
               <th className="py-2 px-2 text-center w-16">Format</th>
               <th className="py-2 px-2 text-right w-20">Bitrate</th>
               <th className="py-2 px-2 text-right w-24">Size</th>
-              <th className="py-2 px-3 w-40">BLAKE3 Hash</th>
+              <th className="py-2 px-3 w-36">BLAKE3 Hash</th>
+              <th className="py-2 px-3 text-center w-16">Edit</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-900">
+          <tbody className="divide-y divide-neutral-900 font-mono">
             {shares.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-12 text-center text-neutral-500 font-sans text-xs">
+                <td colSpan={9} className="py-12 text-center text-neutral-500 font-sans text-xs">
                   No files scanned yet. Enter your local music folder path above and click <b>Scan Directory</b>!
                 </td>
               </tr>
@@ -183,8 +193,17 @@ export const MySharesView: FC<MySharesViewProps> = ({
                   <td className="py-1.5 px-2 text-right text-neutral-300">
                     {(track.size_bytes / (1024 * 1024)).toFixed(1)} MB
                   </td>
-                  <td className="py-1.5 px-3 text-neutral-500 text-[10px] truncate max-w-[140px]" title={track.blake3_hash}>
-                    {track.blake3_hash ? `${track.blake3_hash.slice(0, 12)}...` : '--'}
+                  <td className="py-1.5 px-3 text-neutral-500 text-[10px] truncate max-w-[130px]" title={track.blake3_hash}>
+                    {track.blake3_hash ? `${track.blake3_hash.slice(0, 10)}...` : '--'}
+                  </td>
+                  <td className="py-1.5 px-3 text-center">
+                    <button
+                      onClick={() => setEditingTrack(track)}
+                      className="p-1 rounded bg-neutral-800 hover:bg-emerald-600 hover:text-neutral-950 text-neutral-400 hover:text-neutral-950 transition-colors cursor-pointer"
+                      title="Edit ID3 / Vorbis tags on disk"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
                   </td>
                 </tr>
               ))
@@ -192,6 +211,13 @@ export const MySharesView: FC<MySharesViewProps> = ({
           </tbody>
         </table>
       </div>
+
+      {/* Edit Tags Modal */}
+      <EditTagsModal
+        track={editingTrack}
+        onClose={() => setEditingTrack(null)}
+        onTrackUpdated={handleTrackUpdated}
+      />
     </div>
   );
 };

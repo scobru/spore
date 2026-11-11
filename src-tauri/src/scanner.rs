@@ -3,8 +3,19 @@ use std::fs::File;
 use std::path::Path;
 use lofty::file::{AudioFile, TaggedFileExt};
 use lofty::probe::Probe;
-use lofty::tag::Accessor;
+use lofty::tag::{Accessor, Tag, TagExt};
+use lofty::config::WriteOptions;
 use walkdir::WalkDir;
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct UpdateTagPayload {
+    pub path: String,
+    pub title: String,
+    pub artist: String,
+    pub album: String,
+    pub genre: String,
+    pub year: Option<u32>,
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TrackMetadata {
@@ -119,4 +130,72 @@ pub fn scan_folder<P: AsRef<Path>>(dir: P) -> Result<Vec<TrackMetadata>, String>
     }
 
     Ok(tracks)
+}
+
+/// Updates audio tags (ID3 / Vorbis) on the actual file on disk.
+pub fn update_track_tags(payload: UpdateTagPayload) -> Result<TrackMetadata, String> {
+    let path = Path::new(&payload.path);
+    if !path.exists() {
+        return Err("File does not exist on disk".to_string());
+    }
+
+    let mut tagged_file = Probe::open(path)
+        .map_err(|e| format!("Probe error: {}", e))?
+        .read()
+        .map_err(|e| format!("Read error: {}", e))?;
+
+    let tag = match tagged_file.primary_tag_mut() {
+        Some(t) => t,
+        None => {
+            if let Some(first_tag) = tagged_file.first_tag_mut() {
+                first_tag
+            } else {
+                let tag_type = tagged_file.primary_tag_type();
+                tagged_file.insert_tag(Tag::new(tag_type));
+                tagged_file.primary_tag_mut().ok_or("Failed to create tag")?
+            }
+        }
+    };
+
+    tag.set_title(payload.title.clone());
+    tag.set_artist(payload.artist.clone());
+    tag.set_album(payload.album.clone());
+    tag.set_genre(payload.genre.clone());
+    if let Some(year) = payload.year {
+        tag.set_year(year);
+    }
+
+    tag.save_to_path(path, WriteOptions::default())
+        .map_err(|e| format!("Failed to save tag to file: {}", e))?;
+
+    // Return the updated TrackMetadata with recomputed hash
+    let new_hash = hash_file_blake3(path).unwrap_or_default();
+    let ext = path
+        .extension()
+        .and_then(|s| s.to_str())
+        .map(|s| s.to_uppercase())
+        .unwrap_or_default();
+
+    let properties = tagged_file.properties();
+    let duration_secs = properties.duration().as_secs();
+    let bitrate_kbps = properties.audio_bitrate();
+    let sample_rate = properties.sample_rate();
+    let size_bytes = path.metadata().map(|m| m.len()).unwrap_or(0);
+    let filename = path.file_name().and_then(|s| s.to_str()).unwrap_or("Unknown").to_string();
+
+    Ok(TrackMetadata {
+        path: payload.path,
+        filename,
+        title: payload.title,
+        artist: payload.artist,
+        album: payload.album,
+        genre: payload.genre,
+        year: payload.year,
+        duration_secs,
+        bitrate_kbps,
+        sample_rate,
+        format: ext,
+        size_bytes,
+        blake3_hash: new_hash,
+    })
 }
