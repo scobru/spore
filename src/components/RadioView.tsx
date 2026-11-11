@@ -1,4 +1,4 @@
-import { useState, useEffect, FC } from 'react';
+import { useState, useEffect, useRef, FC } from 'react';
 import {
   Radio,
   Play,
@@ -14,14 +14,26 @@ import {
   Activity,
   Trash2,
   Sliders,
+  Headphones,
+  UserPlus,
 } from 'lucide-react';
 import { Track } from '../types';
+import { createRadioOffer, completeRadioOffer, joinRadioOffer } from '../lib/webrtcSignal';
 
 interface RadioViewProps {
   shares: Track[];
   onPlayTrack: (track: Track) => void;
   currentPlayingTrack: Track | null;
   isPlaying: boolean;
+  /** A live MediaStream of whatever the docked player is currently playing (null until a track has
+   *  loaded once); this is what an invited listener actually hears. */
+  broadcastStream: MediaStream | null;
+}
+
+interface ListenerConnection {
+  id: string;
+  pc: RTCPeerConnection;
+  state: RTCPeerConnectionState;
 }
 
 export const RadioView: FC<RadioViewProps> = ({
@@ -29,6 +41,7 @@ export const RadioView: FC<RadioViewProps> = ({
   onPlayTrack,
   currentPlayingTrack,
   isPlaying,
+  broadcastStream,
 }) => {
   // Station configuration
   const [stationName, setStationName] = useState('Spore Sovereign FM');
@@ -43,9 +56,85 @@ export const RadioView: FC<RadioViewProps> = ({
   const [uptimeSeconds, setUptimeSeconds] = useState(0);
   const [lastHeartbeatSecsAgo, setLastHeartbeatSecsAgo] = useState(0);
   const [ringSlot, setRingSlot] = useState(0);
-  const [listenersCount, setListenersCount] = useState(0);
   const [copiedLink, setCopiedLink] = useState(false);
   const [isEditingSettings, setIsEditingSettings] = useState(false);
+
+  // --- Invite a listener (broadcaster side): generate an offer code, paste back their answer code ---
+  const [listenerConnections, setListenerConnections] = useState<ListenerConnection[]>([]);
+  const [pendingInvite, setPendingInvite] = useState<{ pc: RTCPeerConnection; code: string } | null>(null);
+  const [pendingAnswerInput, setPendingAnswerInput] = useState('');
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const listenersCount = listenerConnections.filter((c) => c.state === 'connected').length;
+
+  const handleGenerateInvite = async () => {
+    setInviteError(null);
+    if (!broadcastStream) {
+      setInviteError('Load a track into the player first — there is nothing to stream yet.');
+      return;
+    }
+    try {
+      const { pc, inviteCode } = await createRadioOffer(broadcastStream);
+      const id = `listener-${Date.now()}`;
+      pc.addEventListener('connectionstatechange', () => {
+        setListenerConnections((prev) => prev.map((c) => (c.id === id ? { ...c, state: pc.connectionState } : c)));
+      });
+      setListenerConnections((prev) => [...prev, { id, pc, state: pc.connectionState }]);
+      setPendingInvite({ pc, code: inviteCode });
+      setPendingAnswerInput('');
+    } catch (err) {
+      setInviteError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleCompleteInvite = async () => {
+    if (!pendingInvite || !pendingAnswerInput.trim()) return;
+    try {
+      await completeRadioOffer(pendingInvite.pc, pendingAnswerInput.trim());
+      setPendingInvite(null);
+      setPendingAnswerInput('');
+    } catch (err) {
+      setInviteError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleCopyInviteCode = () => {
+    if (!pendingInvite) return;
+    navigator.clipboard.writeText(pendingInvite.code);
+    setInviteCopied(true);
+    setTimeout(() => setInviteCopied(false), 2000);
+  };
+
+  // --- Listen to a friend's radio (listener side): paste their offer code, send back an answer code ---
+  const [joinCodeInput, setJoinCodeInput] = useState('');
+  const [joinAnswerCode, setJoinAnswerCode] = useState<string | null>(null);
+  const [joinAnswerCopied, setJoinAnswerCopied] = useState(false);
+  const [joinState, setJoinState] = useState<RTCPeerConnectionState | null>(null);
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handleJoinRadio = async () => {
+    setJoinError(null);
+    if (!joinCodeInput.trim()) return;
+    try {
+      const { pc, answerCode, remoteStream } = await joinRadioOffer(joinCodeInput.trim());
+      pc.addEventListener('connectionstatechange', () => setJoinState(pc.connectionState));
+      setJoinState(pc.connectionState);
+      setJoinAnswerCode(answerCode);
+      remoteStream.then((stream) => {
+        if (remoteAudioRef.current) remoteAudioRef.current.srcObject = stream;
+      });
+    } catch (err) {
+      setJoinError(err instanceof Error ? err.message : 'That invite code looks invalid or expired.');
+    }
+  };
+
+  const handleCopyAnswerCode = () => {
+    if (!joinAnswerCode) return;
+    navigator.clipboard.writeText(joinAnswerCode);
+    setJoinAnswerCopied(true);
+    setTimeout(() => setJoinAnswerCopied(false), 2000);
+  };
 
   // Auto-populate queue with shared tracks if empty
   useEffect(() => {
@@ -83,13 +172,14 @@ export const RadioView: FC<RadioViewProps> = ({
   const handleToggleBroadcast = () => {
     if (isBroadcasting) {
       setIsBroadcasting(false);
-      setListenersCount(0);
+      listenerConnections.forEach((c) => c.pc.close());
+      setListenerConnections([]);
+      setPendingInvite(null);
     } else {
       if (broadcastQueue.length === 0 && shares.length > 0) {
         setBroadcastQueue(shares);
       }
       setIsBroadcasting(true);
-      setListenersCount(Math.floor(Math.random() * 8 + 3));
       // Start audio playback of current track if not playing
       if (currentBroadcastTrack && (!currentPlayingTrack || currentPlayingTrack.blake3_hash !== currentBroadcastTrack.blake3_hash)) {
         onPlayTrack(currentBroadcastTrack);
@@ -434,6 +524,162 @@ export const RadioView: FC<RadioViewProps> = ({
               <div className="mt-3 flex items-center gap-2 text-[11px] font-mono text-neutral-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 <span>Zero network bloat: strictly capped to ~240 KB on Freenet via sliding circular overwrite.</span>
+              </div>
+            </div>
+
+            {/* Invite a Listener (real WebRTC audio, peer to peer) */}
+            <div className="bg-neutral-900/90 border border-neutral-800 rounded-xl p-5">
+              <h3 className="font-mono text-xs font-bold text-neutral-200 flex items-center gap-2 mb-2">
+                <UserPlus className="w-4 h-4 text-emerald-400" />
+                Invite a Listener (live audio, peer to peer)
+              </h3>
+              <p className="text-xs text-neutral-400 leading-relaxed mb-3">
+                No signaling server: generate an invite code below, send it to a friend (e.g. in a Radica DM),
+                they paste it into their Spore's <b className="text-neutral-200">Listen to a Friend's Radio</b> panel
+                and send back the answer code it gives them. Paste that answer here to finish connecting —
+                their audio then plays straight from your deck.
+              </p>
+
+              {!isBroadcasting ? (
+                <p className="text-xs text-neutral-500 font-mono">Start broadcasting above first.</p>
+              ) : (
+                <div className="space-y-3">
+                  <button
+                    onClick={handleGenerateInvite}
+                    className="px-4 py-2 rounded-lg font-mono text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-neutral-950 transition-colors cursor-pointer"
+                  >
+                    Generate Invite Code
+                  </button>
+
+                  {inviteError && <p className="text-xs text-rose-400 font-mono">{inviteError}</p>}
+
+                  {pendingInvite && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <textarea
+                          readOnly
+                          value={pendingInvite.code}
+                          rows={2}
+                          className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 font-mono text-[10px] text-neutral-400 resize-none"
+                        />
+                        <button
+                          onClick={handleCopyInviteCode}
+                          className="px-3 py-2 rounded-lg font-mono text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-100 border border-neutral-700 flex items-center gap-1.5 shrink-0 cursor-pointer"
+                        >
+                          {inviteCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                          {inviteCopied ? 'Copied' : 'Copy'}
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={pendingAnswerInput}
+                          onChange={(e) => setPendingAnswerInput(e.target.value)}
+                          placeholder="Paste their answer code here…"
+                          className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 font-mono text-xs text-neutral-100 focus:outline-none focus:border-emerald-500"
+                        />
+                        <button
+                          onClick={handleCompleteInvite}
+                          disabled={!pendingAnswerInput.trim()}
+                          className="px-3 py-2 rounded-lg font-mono text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-neutral-950 shrink-0 cursor-pointer"
+                        >
+                          Connect
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {listenerConnections.length > 0 && (
+                    <div className="pt-2 border-t border-neutral-800 space-y-1">
+                      {listenerConnections.map((c, i) => (
+                        <div key={c.id} className="flex items-center justify-between text-[11px] font-mono text-neutral-400">
+                          <span>Listener #{i + 1}</span>
+                          <span
+                            className={
+                              c.state === 'connected'
+                                ? 'text-emerald-400'
+                                : c.state === 'failed' || c.state === 'closed' || c.state === 'disconnected'
+                                  ? 'text-rose-400'
+                                  : 'text-amber-400'
+                            }
+                          >
+                            {c.state}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Listen to a Friend's Radio (paste their invite code) */}
+            <div className="bg-neutral-900/90 border border-neutral-800 rounded-xl p-5">
+              <h3 className="font-mono text-xs font-bold text-neutral-200 flex items-center gap-2 mb-2">
+                <Headphones className="w-4 h-4 text-cyan-400" />
+                Listen to a Friend's Radio
+              </h3>
+              <p className="text-xs text-neutral-400 leading-relaxed mb-3">
+                Paste the invite code a friend sent you, then send the answer code it gives you back to them to
+                finish connecting.
+              </p>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <textarea
+                    value={joinCodeInput}
+                    onChange={(e) => setJoinCodeInput(e.target.value)}
+                    placeholder="Paste invite code here…"
+                    rows={2}
+                    className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 font-mono text-[10px] text-neutral-100 resize-none focus:outline-none focus:border-cyan-500"
+                  />
+                  <button
+                    onClick={handleJoinRadio}
+                    disabled={!joinCodeInput.trim()}
+                    className="px-3 py-2 rounded-lg font-mono text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-neutral-950 shrink-0 cursor-pointer"
+                  >
+                    Join
+                  </button>
+                </div>
+
+                {joinError && <p className="text-xs text-rose-400 font-mono">{joinError}</p>}
+
+                {joinAnswerCode && (
+                  <div className="flex items-center gap-2">
+                    <textarea
+                      readOnly
+                      value={joinAnswerCode}
+                      rows={2}
+                      className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 font-mono text-[10px] text-neutral-400 resize-none"
+                    />
+                    <button
+                      onClick={handleCopyAnswerCode}
+                      className="px-3 py-2 rounded-lg font-mono text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-100 border border-neutral-700 flex items-center gap-1.5 shrink-0 cursor-pointer"
+                    >
+                      {joinAnswerCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      {joinAnswerCopied ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                )}
+
+                {joinState && (
+                  <div className="flex items-center justify-between text-[11px] font-mono">
+                    <span className="text-neutral-400">Connection:</span>
+                    <span
+                      className={
+                        joinState === 'connected'
+                          ? 'text-emerald-400'
+                          : joinState === 'failed' || joinState === 'closed' || joinState === 'disconnected'
+                            ? 'text-rose-400'
+                            : 'text-amber-400'
+                      }
+                    >
+                      {joinState}
+                    </span>
+                  </div>
+                )}
+
+                <audio ref={remoteAudioRef} autoPlay controls className="w-full mt-1" />
               </div>
             </div>
           </div>
