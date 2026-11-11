@@ -48,11 +48,17 @@ Traditional P2P clients either rely on centralized indexing servers (like origin
 - Right-click or inspect any peer to view their full shared album folder hierarchy.
 - **One-Click Album Download**: Batch queue an entire album or select individual tracks.
 
-### 5. 🎵 Integrated Hi-Fi Audio Player
+### 5. 📻 Spore Radio FM (Live Audio Broadcast Station)
+- **Personal P2P Radio Station**: Stream music continuously from your local folder or custom queue to Freenet peers.
+- **Heartbeat Presence Detection**: Emits a signed presence heartbeat every 25s with station metadata and `now_playing` track.
+- **Radica Live Cards**: Posts shared on Radica automatically show `🔴 LIVE NOW` with animated equalizer while broadcasting, or cleanly switch to `⚪ OFFLINE` when Spore is closed.
+- **4-Slot Ring Buffer**: Employs circular sliding overwrite (~240 KB max total network footprint), preventing any network storage bloat.
+
+### 6. 🎵 Integrated Hi-Fi Audio Player
 - Docked bottom bar with waveform scrubbing, time remaining, volume control, and codec badge (`FLAC 24-bit`, `MP3 320k`).
 - Native streaming of local files directly from disk via Tauri's secured **Asset Protocol**.
 
-### 6. ✏️ Native Tag Editor (ID3 / Vorbis)
+### 7. ✏️ Native Tag Editor (ID3 / Vorbis)
 - In-place metadata editing powered by Rust `lofty`: rename Title, Artist, Album, Genre, and Year directly on disk.
 - Instant BLAKE3 rehashing upon saving to guarantee content-addressing integrity across peers.
 
@@ -119,14 +125,43 @@ npm install
 npm run tauri dev
 ```
 
-### Production Build
+### Production Build & Multi-Platform Packaging
 
-To build a standalone desktop installer (`.msi` / `.exe` on Windows, `.dmg` on macOS, `.AppImage` / `.deb` on Linux):
+Spore provides automated local build scripts and a GitHub Actions matrix workflow to build and package releases across all major desktop operating systems:
+
+#### 1. Local Build Scripts (with SHA256 Checksums)
+
+- **Windows** (PowerShell):
+  ```powershell
+  .\scripts\build-release.ps1
+  ```
+  Produces `.exe` (NSIS installer) and `.msi` inside `release/` alongside `SHA256SUMS.txt`.
+
+- **Linux & macOS** (Bash):
+  ```bash
+  chmod +x ./scripts/build-release.sh
+  ./scripts/build-release.sh
+  ```
+  Produces `.AppImage` / `.deb` (on Linux) or `.dmg` (on macOS) inside `release/`.
+
+- **Or via npm:**
+  ```bash
+  npm run build:app
+  ```
+
+#### 2. Automated Multi-Platform CI/CD (GitHub Actions)
+
+Pushing a version tag automatically compiles, signs, and attaches installers for all platforms to a GitHub Release:
 
 ```bash
-npm run tauri build
+git tag v0.1.0
+git push origin v0.1.0
 ```
-The compiled binaries will be output in `src-tauri/target/release/bundle/`.
+
+The workflow in `.github/workflows/release.yml` builds:
+- **Windows x64**: `Spore_x64-setup.exe` & `Spore_x64.msi`
+- **macOS Apple Silicon**: `Spore_aarch64.dmg`
+- **Linux x64**: `spore_amd64.AppImage` & `spore_amd64.deb`
 
 ---
 
