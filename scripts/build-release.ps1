@@ -1,4 +1,4 @@
-﻿# Spore - Local Windows Release Packaging Script
+# Spore - Local Windows Release Packaging Script
 # Builds the production web frontend and compiles the Tauri v2 desktop installer.
 
 $ErrorActionPreference = "Stop"
@@ -71,3 +71,4 @@ foreach ($art in $Artifacts) {
     Write-Host "   - $([System.IO.Path]::GetFileName($art)) ($sizeMb MB)" -ForegroundColor White
 }
 Write-Host "   - SHA256SUMS.txt" -ForegroundColor Gray
+

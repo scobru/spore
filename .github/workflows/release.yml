@@ -58,17 +58,18 @@ jobs:
             build-essential \
             curl \
             wget \
-            file
+            file \
+            xdg-utils
 
       - name: Install frontend dependencies
         run: npm ci || npm install
 
       - name: Build Tauri Application
-        uses: tauri-apps/action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
+          tagName: v__VERSION__
           releaseName: 'Spore v__VERSION__'
           releaseBody: |
             🍄 **Spore v__VERSION__** — Sovereign P2P Music & Library Client for Freenet.
@@ -98,3 +99,4 @@ jobs:
             src-tauri/target/release/bundle/appimage/*.AppImage
             src-tauri/target/release/bundle/deb/*.deb
           if-no-files-found: warn
+

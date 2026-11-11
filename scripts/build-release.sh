@@ -41,3 +41,4 @@ fi
 echo -e "\033[32m✅ [4/4] Release build completed successfully!\033[0m"
 echo -e "\033[36m📁 Output directory: $RELEASE_DIR\033[0m"
 ls -lh "$RELEASE_DIR"
+
