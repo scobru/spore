@@ -62,7 +62,6 @@ export const AudioPlayerBar: FC<AudioPlayerBarProps> = ({
         const audioSrc = convertFileSrc(currentTrack.path);
         console.log('[Spore Audio] Loading track:', currentTrack.title, 'Source:', audioSrc);
         audio.src = audioSrc;
-        audio.load();
         audio.volume = isMuted ? 0 : volume / 100;
 
         if (isPlaying) {
@@ -84,7 +83,7 @@ export const AudioPlayerBar: FC<AudioPlayerBarProps> = ({
   // Sync play/pause state
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !audio.src) return;
+    if (!audio) return;
 
     if (isPlaying) {
       resumeAudioCtx();
