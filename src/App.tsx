@@ -4,11 +4,12 @@ import { Track, SearchResult, TransferItem } from './types';
 import { SearchView } from './components/SearchView';
 import { TransfersView } from './components/TransfersView';
 import { MySharesView } from './components/MySharesView';
+import { RadioView } from './components/RadioView';
 import { AudioPlayerBar } from './components/AudioPlayerBar';
 import { BrowseSharesModal } from './components/BrowseSharesModal';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'search' | 'transfers' | 'shares'>('shares');
+  const [activeTab, setActiveTab] = useState<'search' | 'transfers' | 'shares' | 'radio'>('shares');
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [transfers, setTransfers] = useState<TransferItem[]>([]);
@@ -157,6 +158,18 @@ export function App() {
               <span className="text-[10px] text-neutral-400">({shares.length})</span>
             )}
           </button>
+
+          <button
+            onClick={() => setActiveTab('radio')}
+            className={`px-3.5 py-1.5 rounded flex items-center gap-2 transition-colors cursor-pointer ${
+              activeTab === 'radio'
+                ? 'bg-neutral-800 text-rose-400 border border-neutral-700 font-semibold shadow-inner'
+                : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/60'
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5" />
+            Radio FM
+          </button>
         </nav>
 
         {/* Freenet Status & Identity */}
@@ -209,6 +222,18 @@ export function App() {
               setCurrentTrack(track);
               setIsPlaying(true);
             }}
+          />
+        )}
+
+        {activeTab === 'radio' && (
+          <RadioView
+            shares={shares}
+            onPlayTrack={(track) => {
+              setCurrentTrack(track);
+              setIsPlaying(true);
+            }}
+            currentPlayingTrack={currentTrack}
+            isPlaying={isPlaying}
           />
         )}
       </main>

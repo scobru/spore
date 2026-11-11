@@ -34,3 +34,19 @@ export interface TransferItem {
   transferredBytes: number;
   etaSecs: number;
 }
+
+export interface RadioStationState {
+  isBroadcasting: boolean;
+  stationName: string;
+  genre: string;
+  djName: string;
+  djKey: string;
+  nowPlaying: Track | null;
+  elapsedSeconds: number;
+  listenersCount: number;
+  lastHeartbeat: number;
+  queue: Track[];
+  currentQueueIndex: number;
+  bufferMode: 'ring_buffer' | 'webrtc';
+  ringBufferSlot: number;
+}
