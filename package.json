@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "build:app": "npm run build && tauri build",
-    "build:debug": "tauri build --debug"
+    "build:debug": "tauri build --debug",
+    "preview:landing": "npx serve docs",
+    "publish:freenet": "freenet publish --contract-type webapp docs/"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

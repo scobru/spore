@@ -197,6 +197,28 @@ spore/
 
 ---
 
+## 🌐 Landing Page (Freenet & GitHub Pages)
+
+Spore includes a 100% self-contained, zero-external-CDN landing page in [`docs/`](./docs):
+
+- **Local Preview**:
+  ```bash
+  npm run preview:landing
+  # Or simply open docs/index.html in any browser
+  ```
+
+- **Publish to Freenet (Decentralized Web dApp)**:
+  ```bash
+  npm run publish:freenet
+  # Or: freenet publish --contract-type webapp docs/
+  ```
+
+- **Publish to GitHub Pages**:
+  - Automatically deployed via [`.github/workflows/pages.yml`](./.github/workflows/pages.yml) on push to `main`.
+  - Or in GitHub repo settings: **Settings > Pages > Build and deployment > Source: Deploy from a branch (`main`, `/docs`)**.
+
+---
+
 ## ⚖️ Content Policy & Copyright Notice
 
 > [!IMPORTANT]

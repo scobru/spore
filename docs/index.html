@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spore — Sovereign P2P Music & Crate Digging on Freenet</title>
+  <meta name="description" content="Sovereign P2P music client and library digging on Freenet. Zero servers, zero telemetry, uncompressed audio sharing, and bounded-footprint live radio broadcasting.">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+  <!-- Background Ambient Grid -->
+  <div class="grid-overlay"></div>
+
+  <!-- Sticky Navigation -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="#" class="brand">
+        <img src="./favicon.svg" alt="Spore Logo" class="brand-icon">
+        <span>Spore</span>
+        <span class="brand-badge">v0.1.0</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#simulator">Live Demo</a></li>
+        <li><a href="#radio">Spore Radio</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#freenet">Freenet dApp</a></li>
+        <li><a href="#downloads">Downloads</a></li>
+      </ul>
+
+      <div class="nav-cta">
+        <a href="https://github.com/scobru/spore" target="_blank" rel="noopener" class="btn btn-secondary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>
+          GitHub
+        </a>
+        <a href="#downloads" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Download Desktop
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-pill">
+        <span class="dot"></span>
+        <span>SOVEREIGN P2P CRATE DIGGING & STREAMING</span>
+      </div>
+
+      <h1 class="hero-title">
+        The <span class="gradient-text">Soulseek</span> of the Sovereign Web on <span class="gradient-text">Freenet</span>
+      </h1>
+
+      <p class="hero-desc">
+        No corporate cloud. No streaming royalties middlemen. No telemetry. Share high-fidelity music folders directly with peers and broadcast live DJ radio sets with zero network bloat.
+      </p>
+
+      <div class="hero-buttons">
+        <a href="#downloads" class="btn btn-primary" style="padding: 14px 28px; font-size: 1.05rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Download Spore for Desktop
+        </a>
+        <a href="#simulator" class="btn btn-secondary" style="padding: 14px 24px; font-size: 1.05rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Try Live Simulator
+        </a>
+        <a href="https://github.com/scobru/radica" target="_blank" rel="noopener" class="btn btn-radica" style="padding: 14px 24px; font-size: 1.05rem;">
+          🌱 Open in Radica
+        </a>
+      </div>
+
+      <!-- Live Stats Ticker -->
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-val" style="color: var(--emerald-light);">0 Bytes</span>
+          <span class="stat-label">Telemetry / Cloud Stored</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val" style="color: var(--cyan-light);">~240 KB</span>
+          <span class="stat-label">Fixed Radio Storage Cap</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val" style="color: #c084fc;">~25 MB</span>
+          <span class="stat-label">Ultra-Light RAM Footprint</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val" style="color: var(--text-primary);">Tauri v2 + Rust</span>
+          <span class="stat-label">Native Native Architecture</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Interactive App Simulator -->
+  <section class="simulator-section" id="simulator">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Interactive Preview</span>
+        <h2 class="section-title">Experience the Sovereign Console</h2>
+        <p class="section-desc">Test real-time crate digging, the live radio equalizer, and circular ring buffer streaming right inside your browser.</p>
+      </div>
+
+      <div class="simulator-window">
+        <!-- Window Chrome -->
+        <div class="window-header">
+          <div class="window-controls">
+            <span class="win-dot red"></span>
+            <span class="win-dot yellow"></span>
+            <span class="win-dot green"></span>
+          </div>
+          <div class="window-title">
+            <span>🍄 Spore — Sovereign P2P Music & File Digging [Node: local_0x7f2a]</span>
+          </div>
+          <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--emerald-light);">
+            ⚡ Freenet P2P Connected
+          </div>
+        </div>
+
+        <!-- Window Tab Navigation -->
+        <div class="window-tabs">
+          <button class="sim-tab-btn active" data-tab="radio">
+            📻 Spore Radio FM
+            <span style="font-size: 0.65rem; background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 1px 6px; border-radius: 9999px; border: 1px solid #ef4444;">LIVE</span>
+          </button>
+          <button class="sim-tab-btn" data-tab="search">
+            🔍 Crate Digging (Search)
+          </button>
+          <button class="sim-tab-btn" data-tab="shares">
+            💾 My Sovereign Shares (1,420 tracks)
+          </button>
+          <button class="sim-tab-btn" data-tab="transfers">
+            ⚡ Direct Transfers (3 active)
+          </button>
+        </div>
+
+        <!-- Tab 1: Spore Radio FM -->
+        <div class="sim-tab-content active" id="tab-radio">
+          <div class="radio-mock-card">
+            
+            <!-- Left: Now Playing & Audio Spectrum -->
+            <div class="radio-now-playing">
+              <div>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span class="radio-badge-live">
+                    <span class="pulse-circle"></span>
+                    <span id="radio-status-text">ON AIR</span>
+                  </span>
+                  <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">
+                    Uptime: <strong id="radio-uptime" style="color: var(--text-primary);">5m 42s</strong>
+                  </span>
+                </div>
+
+                <div class="radio-track-title">Nightcall (Drive Sovereign Rework)</div>
+                <div class="radio-track-artist">Kavinsky • OutRun (Synthwave / Electro)</div>
+                
+                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                  <span class="format-badge format-flac">FLAC 24-bit</span>
+                  <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); padding: 2px 6px; background: #11141c; border-radius: 4px;">44.1 kHz</span>
+                  <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--emerald-light); padding: 2px 6px; background: #11141c; border-radius: 4px;">1,411 kbps</span>
+                </div>
+              </div>
+
+              <!-- Animated Equalizer Canvas -->
+              <div>
+                <canvas id="radio-canvas" class="radio-visualizer-canvas"></canvas>
+                
+                <div class="radio-controls-bar">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="radio-play-btn" id="radio-play-toggle" title="Play / Pause Audio Stream">⏸</button>
+                    <div>
+                      <div style="font-size: 0.85rem; font-weight: 600;">Broadcast Master</div>
+                      <div style="font-size: 0.75rem; color: var(--text-muted);">Broadcasting to Freenet network</div>
+                    </div>
+                  </div>
+                  <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary);">
+                    Next: <span style="color: var(--cyan-light);">Aphex Twin - Xtal</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Ring Buffer & Radica Bridge -->
+            <div class="radio-ring-buffer-box">
+              <div class="ring-title">
+                <span>🔄 4-Slot Circular Ring Buffer</span>
+                <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--emerald-light);">
+                  Active Slot: <strong id="radio-slot-index">#2</strong>
+                </span>
+              </div>
+
+              <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+                Audio chunks overwrite older slots sequentially. Broadcast for 10 hours or 10 days, Spore's live stream footprint on Freenet is strictly capped at ~240 KB. Zero network bloat.
+              </p>
+
+              <div class="slots-grid">
+                <div class="slot-box">
+                  <div class="slot-label">SLOT #0</div>
+                  <div class="slot-size">58.4 KB</div>
+                </div>
+                <div class="slot-box">
+                  <div class="slot-label">SLOT #1</div>
+                  <div class="slot-size">61.2 KB</div>
+                </div>
+                <div class="slot-box active">
+                  <div class="slot-label">SLOT #2 [LIVE]</div>
+                  <div class="slot-size">59.8 KB</div>
+                </div>
+                <div class="slot-box">
+                  <div class="slot-label">SLOT #3</div>
+                  <div class="slot-size">60.1 KB</div>
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px;">
+                <div style="font-size: 0.85rem; font-weight: 600; color: #d8b4fe; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                  🌱 Radica Social Companion Bridge
+                </div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">
+                  Copy your station URI. When pasted in Radica timeline posts or chats, Radica queries your DJ node presence and renders an interactive live card.
+                </p>
+
+                <div class="radica-share-box">
+                  <span class="radica-link-text">spore:radio:freenet://pubkey_dj_rave_1999</span>
+                  <button class="btn btn-radica" id="copy-radica-btn" style="padding: 6px 12px; font-size: 0.78rem;">
+                    Copy for Radica
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Tab 2: Crate Digging (Search) -->
+        <div class="sim-tab-content" id="tab-search">
+          <div class="search-mock-bar">
+            <input type="text" class="mock-input" id="mock-search-input" placeholder="🔍 Search by artist, title, genre (e.g. Aphex Twin, Synthwave, Dub, FLAC)..." value="Aphex">
+          </div>
+
+          <div class="search-pills">
+            <span class="search-pill active" data-filter="all">All Formats</span>
+            <span class="search-pill" data-filter="flac">FLAC Lossless</span>
+            <span class="search-pill" data-filter="mp3">MP3 320k</span>
+            <span class="search-pill" data-filter="wav">WAV Uncompressed</span>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="mock-table">
+              <thead>
+                <tr>
+                  <th>Track Title</th>
+                  <th>Artist</th>
+                  <th>Genre</th>
+                  <th>Format</th>
+                  <th>Size</th>
+                  <th>Peer Speed</th>
+                </tr>
+              </thead>
+              <tbody id="mock-table-body">
+                <!-- Dynamically populated by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 3: My Shares -->
+        <div class="sim-tab-content" id="tab-shares">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+              <h3 style="font-size: 1.1rem; font-weight: 700;">Local Shared Audio Directories</h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Indexed in-place using Lofty Rust engine. Files remain on your disk.</p>
+            </div>
+            <button class="btn btn-primary" style="padding: 8px 16px; font-size: 0.82rem;">+ Share Folder</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div style="background: #151821; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 18px;">
+              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">📂 /Music/Vinyl_Rips_2024</div>
+              <div style="font-size: 0.8rem; color: var(--emerald-light); font-family: var(--font-mono); margin-bottom: 12px;">782 FLAC tracks • 42.4 GB</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">BLAKE3 Root: e3b0c44298fc1c149afbf4c8996fb924</div>
+            </div>
+            <div style="background: #151821; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 18px;">
+              <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">📂 /Music/Underground_Dub_Archives</div>
+              <div style="font-size: 0.8rem; color: var(--cyan-light); font-family: var(--font-mono); margin-bottom: 12px;">638 MP3 tracks • 8.1 GB</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">BLAKE3 Root: a1f52b3490ec4c259aeaf7c8112fb841</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 4: Direct Transfers -->
+        <div class="sim-tab-content" id="tab-transfers">
+          <div style="margin-bottom: 16px; font-size: 0.9rem; color: var(--text-secondary);">
+            Active P2P Transfers (Encrypted Freenet Data Streams):
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="background: #151821; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 16px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 8px;">
+                <span style="font-weight: 600;">⬇️ Orbital - Halcyon + On + On.flac</span>
+                <span style="font-family: var(--font-mono); color: var(--emerald-light);">74% (11.4 MB/s)</span>
+              </div>
+              <div style="height: 6px; background: #090b0e; border-radius: 3px; overflow: hidden;">
+                <div style="width: 74%; height: 100%; background: var(--emerald-primary);"></div>
+              </div>
+            </div>
+
+            <div style="background: #151821; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 16px;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 8px;">
+                <span style="font-weight: 600;">⬆️ Basic Channel - Subterranean Dub.wav</span>
+                <span style="font-family: var(--font-mono); color: var(--cyan-light);">92% (8.9 MB/s)</span>
+              </div>
+              <div style="height: 6px; background: #090b0e; border-radius: 3px; overflow: hidden;">
+                <div style="width: 92%; height: 100%; background: var(--cyan-neon);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section" id="features">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Sovereign Architecture</span>
+        <h2 class="section-title">Built for Crate Diggers & Audiophiles</h2>
+        <p class="section-desc">Designed from the ground up for privacy, longevity, and high-fidelity sound without cloud compromises.</p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">🍄</div>
+          <h3 class="feature-title">Pure P2P Crate Digging</h3>
+          <p class="feature-body">
+            Search peer music libraries directly over Freenet without centralized web trackers or corporate servers. Discover rare vinyl rips, underground cassettes, and uncompressed master recordings.
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card" id="radio">
+          <div class="feature-icon-wrapper" style="color: var(--cyan-light); background: rgba(6, 182, 212, 0.1); border-color: rgba(6, 182, 212, 0.25);">📻</div>
+          <h3 class="feature-title">Spore Radio FM</h3>
+          <p class="feature-body">
+            Stream your queue in sequence to listeners worldwide. Spore uses a circular 4-slot ring buffer (~240 KB fixed cap) that overwrites older slots so the network never bloats.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper" style="color: #c084fc; background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.25);">🌱</div>
+          <h3 class="feature-title">Radica Companion Bridge</h3>
+          <p class="feature-body">
+            Share <code style="font-family: var(--font-mono); color: #d8b4fe;">spore:radio:&lt;key&gt;</code> links across Radica. Radica monitors your DJ node heartbeats to display real-time <span style="color: #ef4444; font-weight: 700;">🔴 LIVE NOW</span> interactive cards in timeline feeds and chats.
+          </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">🏷️</div>
+          <h3 class="feature-title">In-Place ID3 & Vorbis Editor</h3>
+          <p class="feature-body">
+            Powered by the Rust <code style="font-family: var(--font-mono); color: var(--emerald-light);">lofty</code> engine. Read and write ID3v2, Vorbis Comments, and FLAC metadata instantly on your local files without converting or re-encoding.
+          </p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper" style="color: var(--amber-pulse); background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.25);">⚡</div>
+          <h3 class="feature-title">Tauri v2 + Rust Performance</h3>
+          <p class="feature-body">
+            No Electron bloat. Spore compiles to native machine binaries with a tiny memory footprint (~25 MB RAM) and instant startup times across Windows, macOS, and Linux.
+          </p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-card">
+          <div class="feature-icon-wrapper" style="color: #38bdf8; background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.25);">🔒</div>
+          <h3 class="feature-title">Zero Telemetry & 100% Free</h3>
+          <p class="feature-body">
+            No user tracking, no third-party analytic pings, no accounts, and no walled gardens. Open-source under MIT, peer-reviewed, and fully verifiable.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture Flow -->
+  <section class="arch-section" id="architecture">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Decentralized Streaming Protocol</span>
+        <h2 class="section-title">How Spore Streams Without Network Bloat</h2>
+        <p class="section-desc">Traditional streaming uploads infinite GBs to decentralized networks. Spore introduces bounded circular streaming.</p>
+      </div>
+
+      <div class="arch-flow-diagram">
+        <div class="arch-node highlight">
+          <div style="font-size: 2rem;">🎛️</div>
+          <div class="arch-node-title">1. DJ Broadcast Node</div>
+          <div class="arch-node-desc">Spore desktop app plays local audio queue, slicing 60 KB chunks with Blake3 hashes.</div>
+        </div>
+
+        <div class="arch-arrow">➔</div>
+
+        <div class="arch-node highlight">
+          <div style="font-size: 2rem;">🔄</div>
+          <div class="arch-node-title">2. 4-Slot Ring Buffer</div>
+          <div class="arch-node-desc">Freenet contract state strictly limited to 4 rotating slots (~240 KB total). Old slots are overwritten.</div>
+        </div>
+
+        <div class="arch-arrow">➔</div>
+
+        <div class="arch-node">
+          <div style="font-size: 2rem;">🌱</div>
+          <div class="arch-node-title">3. Radica Live Card</div>
+          <div class="arch-node-desc">Subscribes to 25s DJ heartbeats. Shows 🔴 LIVE status in posts, or marks OFFLINE when DJ stops.</div>
+        </div>
+
+        <div class="arch-arrow">➔</div>
+
+        <div class="arch-node">
+          <div style="font-size: 2rem;">🎧</div>
+          <div class="arch-node-title">4. Peer Listeners</div>
+          <div class="arch-node-desc">Direct P2P audio playback with seamless chunk buffering and zero centralized streaming infrastructure.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Freenet dApp Publishing Section -->
+  <section class="simulator-section" id="freenet">
+    <div class="container">
+      <div class="freenet-box">
+        <div class="freenet-info">
+          <span class="section-tag" style="color: var(--emerald-light);">Decentralized Web Native</span>
+          <h3 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 12px;">Publishable on Freenet & GitHub Pages</h3>
+          <p style="color: var(--text-secondary); font-size: 0.98rem; line-height: 1.6; margin-bottom: 20px;">
+            This entire landing page is built with 100% self-contained assets and relative paths. It can be hosted on GitHub Pages or deployed directly as a decentralized web application on Freenet.
+          </p>
+
+          <div class="freenet-code">
+            <span>freenet publish --contract-type webapp docs/</span>
+            <button class="btn btn-secondary" id="copy-contract-btn" style="padding: 6px 14px; font-size: 0.78rem;">Copy Command</button>
+          </div>
+        </div>
+
+        <div style="text-align: center; min-width: 200px;">
+          <img src="./favicon.svg" alt="Freenet Spore" style="width: 110px; height: 110px; filter: drop-shadow(0 0 24px rgba(16, 185, 129, 0.4));">
+          <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--emerald-light); margin-top: 12px;">
+            Zero External CDNs • Zero Leaks
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Downloads Matrix Section -->
+  <section class="downloads-section" id="downloads">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Desktop Releases</span>
+        <h2 class="section-title">Download Spore v0.1.0</h2>
+        <p class="section-desc">Available for Windows, macOS, and Linux. Standalone native binaries with zero external runtimes needed.</p>
+      </div>
+
+      <div class="downloads-grid">
+        <!-- Windows -->
+        <div class="download-card">
+          <div class="os-icon">🪟</div>
+          <div class="os-name">Windows</div>
+          <div class="os-specs">Windows 10 / 11 (64-bit x86_64)</div>
+          
+          <div class="download-actions">
+            <a href="https://github.com/scobru/spore/releases/latest" class="btn btn-primary" style="justify-content: center;">
+              Download .exe (Installer)
+            </a>
+            <a href="https://github.com/scobru/spore/releases/latest" class="btn btn-secondary" style="justify-content: center;">
+              Download .msi Package
+            </a>
+          </div>
+        </div>
+
+        <!-- macOS -->
+        <div class="download-card">
+          <div class="os-icon">🍏</div>
+          <div class="os-name">macOS</div>
+          <div class="os-specs">macOS 11+ (Apple Silicon & Intel)</div>
+          
+          <div class="download-actions">
+            <a href="https://github.com/scobru/spore/releases/latest" class="btn btn-primary" style="justify-content: center;">
+              Download .dmg (Installer)
+            </a>
+            <a href="https://github.com/scobru/spore/releases/latest" class="btn btn-secondary" style="justify-content: center;">
+              Universal Release
+            </a>
+          </div>
+        </div>
+
+        <!-- Linux -->
+        <div class="download-card">
+          <div class="os-icon">🐧</div>
+          <div class="os-name">Linux</div>
+          <div class="os-specs">Ubuntu, Debian, Fedora, Arch (x86_64)</div>
+          
+          <div class="download-actions">
+            <a href="https://github.com/scobru/spore/releases/latest" class="btn btn-primary" style="justify-content: center;">
+              Download .AppImage
+            </a>
+            <a href="https://github.com/scobru/spore/releases/latest" class="btn btn-secondary" style="justify-content: center;">
+              Download .deb Package
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Source Code Building -->
+      <div style="background: #11141c; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 24px; text-align: center; max-width: 780px; margin: 0 auto;">
+        <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 6px;">Building from Source</div>
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 14px;">
+          Prefer compiling locally with Cargo and Node? Spore is 100% open source.
+        </p>
+        <div style="background: #090b0e; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px 18px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-primary); display: inline-block;">
+          git clone https://github.com/scobru/spore.git &amp;&amp; cd spore &amp;&amp; npm install &amp;&amp; npm run build:app
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col" style="max-width: 340px;">
+          <div class="brand" style="margin-bottom: 8px;">
+            <img src="./favicon.svg" alt="Spore Logo" class="brand-icon">
+            <span>Spore</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+            Sovereign P2P music client and library digging on Freenet. Reclaiming music sharing for the decentralized community.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Ecosystem</h4>
+          <a href="https://github.com/scobru/spore" target="_blank" rel="noopener">Spore GitHub</a>
+          <a href="https://github.com/scobru/radica" target="_blank" rel="noopener">Radica Social dApp</a>
+          <a href="https://freenet.org" target="_blank" rel="noopener">Freenet Network</a>
+        </div>
+
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <a href="https://github.com/scobru/spore/releases" target="_blank" rel="noopener">Releases &amp; Checksums</a>
+          <a href="https://github.com/scobru/spore#architecture" target="_blank" rel="noopener">Architecture Spec</a>
+          <a href="https://github.com/scobru/spore/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+        </div>
+
+        <div class="footer-col">
+          <h4>Sovereignty</h4>
+          <span style="font-size: 0.85rem; color: var(--emerald-light); font-family: var(--font-mono);">Zero Telemetry</span>
+          <span style="font-size: 0.85rem; color: var(--cyan-light); font-family: var(--font-mono);">Zero Tracking Cookies</span>
+          <span style="font-size: 0.85rem; color: #c084fc; font-family: var(--font-mono);">100% Peer-to-Peer</span>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 Spore Community. Released under the MIT License.</div>
+        <div style="font-family: var(--font-mono); color: var(--emerald-light);">
+          Sovereign Audio • Bounded Footprint (~240 KB) • Pure P2P
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast-notification">
+    <span style="font-size: 1.2rem;">✨</span>
+    <span id="toast-text">Copied to clipboard</span>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
