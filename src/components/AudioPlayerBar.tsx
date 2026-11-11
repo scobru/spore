@@ -34,17 +34,23 @@ export const AudioPlayerBar: FC<AudioPlayerBarProps> = ({
   // can only ever be wrapped in one MediaElementSourceNode, which React 18 StrictMode's double-invoked
   // effect would violate on the second run if this tried to create and close one per mount.
   const broadcastWired = useRef(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !onBroadcastStreamReady || broadcastWired.current) return;
     broadcastWired.current = true;
     const ctx = new AudioContext();
+    audioCtxRef.current = ctx;
     const source = ctx.createMediaElementSource(audio);
     const destination = ctx.createMediaStreamDestination();
     source.connect(destination);
     source.connect(ctx.destination); // keep local playback audible
     onBroadcastStreamReady(destination.stream);
   }, []);
+
+  // A fresh AudioContext starts "suspended" until resumed from a user gesture; once the <audio> element is wrapped
+  // in a MediaElementSourceNode (above), it only plays through this graph, so without this nothing is heard at all.
+  const resumeAudioCtx = () => void audioCtxRef.current?.resume();
 
   // Sync audio source
   useEffect(() => {
@@ -60,6 +66,7 @@ export const AudioPlayerBar: FC<AudioPlayerBarProps> = ({
         audio.volume = isMuted ? 0 : volume / 100;
 
         if (isPlaying) {
+          resumeAudioCtx();
           audio
             .play()
             .then(() => console.log('[Spore Audio] Playback started'))
@@ -80,6 +87,7 @@ export const AudioPlayerBar: FC<AudioPlayerBarProps> = ({
     if (!audio || !audio.src) return;
 
     if (isPlaying) {
+      resumeAudioCtx();
       audio
         .play()
         .then(() => console.log('[Spore Audio] Playback resumed'))

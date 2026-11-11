@@ -8,15 +8,33 @@ import { RadioView } from './components/RadioView';
 import { AudioPlayerBar } from './components/AudioPlayerBar';
 import { BrowseSharesModal } from './components/BrowseSharesModal';
 
+const SHARES_STORAGE_KEY = 'spore_shares_v1';
+const loadStoredShares = (): Track[] => {
+  try {
+    const raw = localStorage.getItem(SHARES_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Track[]) : [];
+  } catch {
+    return [];
+  }
+};
+
 export function App() {
   const [activeTab, setActiveTab] = useState<'search' | 'transfers' | 'shares' | 'radio'>('shares');
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [transfers, setTransfers] = useState<TransferItem[]>([]);
-  const [shares, setShares] = useState<Track[]>([]);
+  const [shares, setShares] = useState<Track[]>(loadStoredShares);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [browsingUser, setBrowsingUser] = useState<string | null>(null);
   const [broadcastStream, setBroadcastStream] = useState<MediaStream | null>(null);
+
+  // Scanning a folder is slow (ID3/FLAC parsing + BLAKE3 hashing over a whole library): keep the result past a
+  // restart instead of asking for it again every time the app opens.
+  useEffect(() => {
+    try {
+      localStorage.setItem(SHARES_STORAGE_KEY, JSON.stringify(shares));
+    } catch {}
+  }, [shares]);
 
   // Search across local shares and Freenet peer announcements
   const handleSearch = (query: string) => {
