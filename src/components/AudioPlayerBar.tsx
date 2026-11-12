@@ -46,6 +46,13 @@ export const AudioPlayerBar: FC<AudioPlayerBarProps> = ({
     source.connect(destination);
     source.connect(ctx.destination); // keep local playback audible
     onBroadcastStreamReady(destination.stream);
+
+    // Chromium/WebView2 only lifts a suspended AudioContext out of "suspended" within a real user gesture's own
+    // call stack — resuming it later, from a React effect reacting to a click (not the click itself), can be too
+    // late. Unlock on the very first pointerdown/keydown anywhere, which still fires inside that gesture.
+    const unlock = () => void ctx.resume();
+    document.addEventListener('pointerdown', unlock, { once: true });
+    document.addEventListener('keydown', unlock, { once: true });
   }, []);
 
   // A fresh AudioContext starts "suspended" until resumed from a user gesture; once the <audio> element is wrapped
