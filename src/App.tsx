@@ -205,7 +205,7 @@ export function App() {
       </header>
 
       {/* Main Tab Viewport */}
-      <main className="flex-1 overflow-hidden relative">
+      <main className="flex-1 overflow-y-auto relative">
         {activeTab === 'search' && (
           <SearchView
             results={searchResults}
