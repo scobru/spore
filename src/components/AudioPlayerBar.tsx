@@ -28,37 +28,6 @@ export const AudioPlayerBar: FC<AudioPlayerBarProps> = ({
   const [volume, setVolume] = useState(85);
   const [isMuted, setIsMuted] = useState(false);
 
-  // Route the <audio> element through the Web Audio API once, so we can tap a stable MediaStream of
-  // whatever it plays (for broadcasting) while it keeps playing locally through the same graph.
-  // shortcut: never torn down (one player bar lives for the app's whole session) — an HTMLMediaElement
-  // can only ever be wrapped in one MediaElementSourceNode, which React 18 StrictMode's double-invoked
-  // effect would violate on the second run if this tried to create and close one per mount.
-  const broadcastWired = useRef(false);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !onBroadcastStreamReady || broadcastWired.current) return;
-    broadcastWired.current = true;
-    const ctx = new AudioContext();
-    audioCtxRef.current = ctx;
-    const source = ctx.createMediaElementSource(audio);
-    const destination = ctx.createMediaStreamDestination();
-    source.connect(destination);
-    source.connect(ctx.destination); // keep local playback audible
-    onBroadcastStreamReady(destination.stream);
-
-    // Chromium/WebView2 only lifts a suspended AudioContext out of "suspended" within a real user gesture's own
-    // call stack — resuming it later, from a React effect reacting to a click (not the click itself), can be too
-    // late. Unlock on the very first pointerdown/keydown anywhere, which still fires inside that gesture.
-    const unlock = () => void ctx.resume();
-    document.addEventListener('pointerdown', unlock, { once: true });
-    document.addEventListener('keydown', unlock, { once: true });
-  }, []);
-
-  // A fresh AudioContext starts "suspended" until resumed from a user gesture; once the <audio> element is wrapped
-  // in a MediaElementSourceNode (above), it only plays through this graph, so without this nothing is heard at all.
-  const resumeAudioCtx = () => void audioCtxRef.current?.resume();
-
   // Sync audio source
   useEffect(() => {
     const audio = audioRef.current;
@@ -72,7 +41,6 @@ export const AudioPlayerBar: FC<AudioPlayerBarProps> = ({
         audio.volume = isMuted ? 0 : volume / 100;
 
         if (isPlaying) {
-          resumeAudioCtx();
           audio
             .play()
             .then(() => console.log('[Spore Audio] Playback started'))
@@ -93,7 +61,6 @@ export const AudioPlayerBar: FC<AudioPlayerBarProps> = ({
     if (!audio) return;
 
     if (isPlaying) {
-      resumeAudioCtx();
       audio
         .play()
         .then(() => console.log('[Spore Audio] Playback resumed'))
@@ -101,6 +68,48 @@ export const AudioPlayerBar: FC<AudioPlayerBarProps> = ({
     } else {
       audio.pause();
     }
+  }, [isPlaying]);
+
+  // Spore Radio's broadcast stream comes from a second, muted, hidden <audio> element that mirrors the docked
+  // player, decoded through its own Web Audio graph — never the docked player's own element. Tauri serves local
+  // files from a different origin (asset.localhost) than the app page, so wrapping an element playing from there
+  // in a MediaElementSourceNode taints it silent, by spec, for Web Audio purposes; wrapping the docked player
+  // itself silenced ordinary local playback too, since it only plays through that (silent) graph from then on.
+  const broadcastAudioRef = useRef<HTMLAudioElement | null>(null);
+  const broadcastWired = useRef(false);
+  useEffect(() => {
+    const audio = broadcastAudioRef.current;
+    if (!audio || !onBroadcastStreamReady || broadcastWired.current) return;
+    broadcastWired.current = true;
+    const ctx = new AudioContext();
+    const source = ctx.createMediaElementSource(audio);
+    const destination = ctx.createMediaStreamDestination();
+    source.connect(destination);
+    onBroadcastStreamReady(destination.stream);
+    const unlock = () => void ctx.resume();
+    document.addEventListener('pointerdown', unlock, { once: true });
+    document.addEventListener('keydown', unlock, { once: true });
+  }, []);
+
+  // Mirror the docked player's track and play state into the broadcast element.
+  useEffect(() => {
+    const audio = broadcastAudioRef.current;
+    if (!audio || !onBroadcastStreamReady) return;
+    if (currentTrack?.path) {
+      audio.src = convertFileSrc(currentTrack.path);
+      audio.load();
+      if (isPlaying) audio.play().catch(() => {});
+    } else {
+      audio.pause();
+      audio.src = '';
+    }
+  }, [currentTrack, onBroadcastStreamReady]);
+
+  useEffect(() => {
+    const audio = broadcastAudioRef.current;
+    if (!audio || !audio.src) return;
+    if (isPlaying) audio.play().catch(() => {});
+    else audio.pause();
   }, [isPlaying]);
 
   // Sync volume
@@ -141,6 +150,7 @@ export const AudioPlayerBar: FC<AudioPlayerBarProps> = ({
           else onTogglePlay();
         }}
       />
+      {onBroadcastStreamReady && <audio ref={broadcastAudioRef} muted preload="auto" />}
 
       {/* Track Info */}
       <div className="flex items-center gap-3 w-1/4 min-w-[200px]">
