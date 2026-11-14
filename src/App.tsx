@@ -43,6 +43,9 @@ export function App() {
   const [browsingUser, setBrowsingUser] = useState<string | null>(null);
   const [broadcastStream, setBroadcastStream] = useState<MediaStream | null>(null);
   const [isRadioLive, setIsRadioLive] = useState(false);
+  const [radioQueue, setRadioQueue] = useState<Track[]>([]);
+  const [radioQueueIndex, setRadioQueueIndex] = useState(0);
+  const [radioSourceMode, setRadioSourceMode] = useState<'playlist' | 'mic' | 'system' | 'url'>('playlist');
 
   const [myPeerId] = useState(() => getOrCreatePeerId());
   const [username, setUsername] = useState(() => getStoredUsername());
@@ -82,6 +85,63 @@ export function App() {
       localStorage.setItem(SHARES_STORAGE_KEY, JSON.stringify(shares));
     } catch {}
   }, [shares]);
+
+  useEffect(() => {
+    if (radioQueue.length === 0 && shares.length > 0) {
+      setRadioQueue(shares);
+      setRadioQueueIndex(0);
+    }
+  }, [shares, radioQueue.length]);
+
+  const handlePlayTrack = (track: Track) => {
+    setCurrentTrack(track);
+    setIsPlaying(true);
+    if (isRadioLive && radioSourceMode === 'playlist') {
+      const idx = radioQueue.findIndex((t) => t.path === track.path);
+      if (idx >= 0) {
+        setRadioQueueIndex(idx);
+      }
+    }
+  };
+
+  const handleNextTrack = () => {
+    if (isRadioLive && radioSourceMode === 'playlist' && radioQueue.length > 0) {
+      const nextIdx = (radioQueueIndex + 1) % radioQueue.length;
+      setRadioQueueIndex(nextIdx);
+      setCurrentTrack(radioQueue[nextIdx]);
+      setIsPlaying(true);
+      return;
+    }
+
+    if (!currentTrack || shares.length === 0) {
+      setIsPlaying(false);
+      return;
+    }
+    const idx = shares.findIndex((t) => t.path === currentTrack.path);
+    if (idx >= 0 && idx < shares.length - 1) {
+      setCurrentTrack(shares[idx + 1]);
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(false);
+    }
+  };
+
+  const handlePrevTrack = () => {
+    if (isRadioLive && radioSourceMode === 'playlist' && radioQueue.length > 0) {
+      const prevIdx = (radioQueueIndex - 1 + radioQueue.length) % radioQueue.length;
+      setRadioQueueIndex(prevIdx);
+      setCurrentTrack(radioQueue[prevIdx]);
+      setIsPlaying(true);
+      return;
+    }
+
+    if (!currentTrack || shares.length === 0) return;
+    const idx = shares.findIndex((t) => t.path === currentTrack.path);
+    if (idx > 0) {
+      setCurrentTrack(shares[idx - 1]);
+      setIsPlaying(true);
+    }
+  };
 
   // Start P2P Seeder/Downloader node on Freenet
   useEffect(() => {
@@ -404,10 +464,7 @@ export function App() {
             isSyncingNetwork={isSyncingNetwork}
             networkPeersCount={networkPeers.filter((p) => p.peer_id !== myPeerId).length}
             networkTracksCount={networkResults.length}
-            onPlayTrack={(track) => {
-              setCurrentTrack(track);
-              setIsPlaying(true);
-            }}
+            onPlayTrack={handlePlayTrack}
             onDownloadTrack={handleDownloadTrack}
             onBrowseUser={(u) => setBrowsingUser(u)}
           />
@@ -421,10 +478,7 @@ export function App() {
             onTogglePause={handleTogglePause}
             onCancelTransfer={handleCancelTransfer}
             onClearCompleted={handleClearCompleted}
-            onPlayTrack={(track) => {
-              setCurrentTrack(track);
-              setIsPlaying(true);
-            }}
+            onPlayTrack={handlePlayTrack}
           />
         )}
 
@@ -437,10 +491,7 @@ export function App() {
                 setCurrentTrack(newShares[0]);
               }
             }}
-            onPlayTrack={(track) => {
-              setCurrentTrack(track);
-              setIsPlaying(true);
-            }}
+            onPlayTrack={handlePlayTrack}
             onPublishCatalog={handlePublishCatalog}
           />
         )}
@@ -449,14 +500,17 @@ export function App() {
         <div className={activeTab === 'radio' ? 'flex-1 flex flex-col overflow-hidden' : 'hidden'}>
           <RadioView
             shares={shares}
-            onPlayTrack={(track) => {
-              setCurrentTrack(track);
-              setIsPlaying(true);
-            }}
+            onPlayTrack={handlePlayTrack}
             currentPlayingTrack={currentTrack}
             isPlaying={isPlaying}
             broadcastStream={broadcastStream}
             onBroadcastingChange={setIsRadioLive}
+            broadcastQueue={radioQueue}
+            queueIndex={radioQueueIndex}
+            onSetBroadcastQueue={setRadioQueue}
+            onSetQueueIndex={setRadioQueueIndex}
+            sourceMode={radioSourceMode}
+            onSourceModeChange={setRadioSourceMode}
           />
         </div>
       </main>
@@ -466,20 +520,8 @@ export function App() {
         currentTrack={currentTrack}
         isPlaying={isPlaying}
         onTogglePlay={() => setIsPlaying(!isPlaying)}
-        onNext={() => {
-          if (!currentTrack || shares.length === 0) return;
-          const idx = shares.findIndex((t) => t.path === currentTrack.path);
-          if (idx >= 0 && idx < shares.length - 1) {
-            setCurrentTrack(shares[idx + 1]);
-          }
-        }}
-        onPrev={() => {
-          if (!currentTrack || shares.length === 0) return;
-          const idx = shares.findIndex((t) => t.path === currentTrack.path);
-          if (idx > 0) {
-            setCurrentTrack(shares[idx - 1]);
-          }
-        }}
+        onNext={handleNextTrack}
+        onPrev={handlePrevTrack}
         onBroadcastStreamReady={setBroadcastStream}
       />
 

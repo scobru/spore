@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, FC } from 'react';
+import { useState, useEffect, useRef, FC, Dispatch, SetStateAction } from 'react';
 import {
   Radio,
   Play,
@@ -40,6 +40,12 @@ interface RadioViewProps {
    *  loaded once); this is what an invited listener actually hears. */
   broadcastStream: MediaStream | null;
   onBroadcastingChange?: (live: boolean) => void;
+  broadcastQueue: Track[];
+  queueIndex: number;
+  onSetBroadcastQueue: Dispatch<SetStateAction<Track[]>>;
+  onSetQueueIndex: Dispatch<SetStateAction<number>>;
+  sourceMode: BroadcastSourceMode;
+  onSourceModeChange: (mode: BroadcastSourceMode) => void;
 }
 
 type BroadcastSourceMode = 'playlist' | 'mic' | 'system' | 'url';
@@ -57,6 +63,12 @@ export const RadioView: FC<RadioViewProps> = ({
   isPlaying,
   broadcastStream,
   onBroadcastingChange,
+  broadcastQueue,
+  queueIndex,
+  onSetBroadcastQueue,
+  onSetQueueIndex,
+  sourceMode,
+  onSourceModeChange,
 }) => {
   // Station configuration
   const [stationName, setStationName] = useState('Spore Sovereign FM');
@@ -65,7 +77,6 @@ export const RadioView: FC<RadioViewProps> = ({
   const [roomId, setRoomId] = useState(() => getOrCreateLocalRoomId());
 
   // External audio source state
-  const [sourceMode, setSourceMode] = useState<BroadcastSourceMode>('playlist');
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
   const [externalUrl, setExternalUrl] = useState('');
@@ -79,8 +90,6 @@ export const RadioView: FC<RadioViewProps> = ({
 
   // Radio operational state
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const [broadcastQueue, setBroadcastQueue] = useState<Track[]>([]);
-  const [queueIndex, setQueueIndex] = useState(0);
   const [uptimeSeconds, setUptimeSeconds] = useState(0);
   const [lastHeartbeatSecsAgo, setLastHeartbeatSecsAgo] = useState(0);
   const [ringSlot, setRingSlot] = useState(0);
@@ -222,13 +231,6 @@ export const RadioView: FC<RadioViewProps> = ({
     setTimeout(() => setJoinAnswerCopied(false), 2000);
   };
 
-  // Auto-populate queue with shared tracks if empty
-  useEffect(() => {
-    if (broadcastQueue.length === 0 && shares.length > 0) {
-      setBroadcastQueue(shares.slice(0, 15));
-    }
-  }, [shares]);
-
   // Broadcast timer & heartbeat simulator
   useEffect(() => {
     if (!isBroadcasting) {
@@ -260,7 +262,8 @@ export const RadioView: FC<RadioViewProps> = ({
     if (sourceMode === 'mic') return 'Live Audio Input (Mic / Line-In)';
     if (sourceMode === 'system') return 'System / App Audio Capture';
     if (sourceMode === 'url') return externalUrl ? `External Stream: ${externalUrl}` : 'External Audio Stream';
-    return currentBroadcastTrack ? `${currentBroadcastTrack.artist} - ${currentBroadcastTrack.title}` : 'Live Audio Stream';
+    const activeTrack = isBroadcasting && currentPlayingTrack ? currentPlayingTrack : currentBroadcastTrack;
+    return activeTrack ? `${activeTrack.artist} - ${activeTrack.title}` : 'Live Audio Stream';
   };
 
   // Notify parent App when broadcasting state changes (for tab badge)
@@ -444,7 +447,7 @@ export const RadioView: FC<RadioViewProps> = ({
         ts: Date.now(),
       })
       .catch(() => {});
-  }, [isBroadcasting, currentBroadcastTrack, sourceMode, externalUrl, stationName, genre, djName]);
+  }, [isBroadcasting, currentBroadcastTrack, currentPlayingTrack, sourceMode, externalUrl, stationName, genre, djName]);
 
   // Cleanup listener on unmount
   useEffect(() => {
@@ -462,14 +465,16 @@ export const RadioView: FC<RadioViewProps> = ({
       setPendingInvite(null);
     } else {
       if (sourceMode === 'playlist') {
-        let trackToPlay = currentBroadcastTrack;
-        if (broadcastQueue.length === 0 && shares.length > 0) {
-          setBroadcastQueue(shares);
-          trackToPlay = shares[0];
+        let queue = broadcastQueue;
+        if (queue.length === 0 && shares.length > 0) {
+          queue = shares;
+          onSetBroadcastQueue(queue);
+          onSetQueueIndex(0);
         }
+        const trackToPlay = queue[queueIndex] ?? queue[0] ?? null;
         setIsBroadcasting(true);
-        // Start audio playback of current track if not playing so broadcastStream is created
-        if (trackToPlay && (!currentPlayingTrack || currentPlayingTrack.blake3_hash !== trackToPlay.blake3_hash)) {
+        // Always start audio playback if paused or playing a different track so broadcastStream stays live
+        if (trackToPlay && (!isPlaying || currentPlayingTrack?.path !== trackToPlay.path)) {
           onPlayTrack(trackToPlay);
         }
       } else {
@@ -486,30 +491,37 @@ export const RadioView: FC<RadioViewProps> = ({
   const handleNextTrack = () => {
     if (broadcastQueue.length === 0) return;
     const nextIdx = (queueIndex + 1) % broadcastQueue.length;
-    setQueueIndex(nextIdx);
+    onSetQueueIndex(nextIdx);
     onPlayTrack(broadcastQueue[nextIdx]);
   };
 
   const handleShuffleQueue = () => {
     const shuffled = [...broadcastQueue].sort(() => Math.random() - 0.5);
-    setBroadcastQueue(shuffled);
-    setQueueIndex(0);
+    onSetBroadcastQueue(shuffled);
+    onSetQueueIndex(0);
     if (shuffled.length > 0 && isBroadcasting) {
       onPlayTrack(shuffled[0]);
     }
   };
 
   const handleAddAllShares = () => {
-    setBroadcastQueue(shares);
-    setQueueIndex(0);
+    onSetBroadcastQueue(shares);
+    onSetQueueIndex(0);
   };
 
   const handleRemoveFromQueue = (index: number) => {
-    setBroadcastQueue((prev) => prev.filter((_, i) => i !== index));
-    if (index === queueIndex && broadcastQueue.length > 1) {
-      const nextIdx = index < broadcastQueue.length - 1 ? index : 0;
-      setQueueIndex(nextIdx);
-      if (isBroadcasting) onPlayTrack(broadcastQueue[nextIdx]);
+    const nextQueue = broadcastQueue.filter((_, i) => i !== index);
+    onSetBroadcastQueue(nextQueue);
+    if (nextQueue.length === 0) {
+      onSetQueueIndex(0);
+      return;
+    }
+    if (index === queueIndex) {
+      const nextIdx = index < nextQueue.length ? index : 0;
+      onSetQueueIndex(nextIdx);
+      if (isBroadcasting) onPlayTrack(nextQueue[nextIdx]);
+    } else if (index < queueIndex) {
+      onSetQueueIndex(queueIndex - 1);
     }
   };
 
@@ -690,7 +702,7 @@ export const RadioView: FC<RadioViewProps> = ({
                       onClick={() => {
                         setSourceError(null);
                         if (id === 'playlist') stopExternalSource();
-                        setSourceMode(id);
+                        onSourceModeChange(id);
                       }}
                       className={`px-2.5 py-1 rounded flex items-center gap-1.5 transition-colors cursor-pointer ${
                         sourceMode === id
@@ -876,8 +888,14 @@ export const RadioView: FC<RadioViewProps> = ({
                   <Share2 className="w-4 h-4" />
                   Share Radio Link (Freenet P2P)
                 </h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/80">
-                  {freenetStatus ? freenetStatus : isBroadcasting ? 'Starting…' : 'Ready'}
+                <span
+                  className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                    freenetError
+                      ? 'bg-rose-950/80 text-rose-400 border-rose-800/80'
+                      : 'bg-emerald-950 text-emerald-400 border-emerald-800/80'
+                  }`}
+                >
+                  {freenetError ? 'Offline / Error' : freenetStatus ? freenetStatus : isBroadcasting ? 'Starting…' : 'Ready'}
                 </span>
               </div>
 
@@ -1178,7 +1196,7 @@ export const RadioView: FC<RadioViewProps> = ({
                       ) : (
                         <button
                           onClick={() => {
-                            setQueueIndex(idx);
+                            onSetQueueIndex(idx);
                             onPlayTrack(t);
                           }}
                           className="text-neutral-400 hover:text-emerald-400 shrink-0"
