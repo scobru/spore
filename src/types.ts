@@ -18,6 +18,7 @@ export interface SearchResult {
   id: string;
   track: Track;
   peerUser: string;
+  peerId?: string;
   freeSlots: number;
   queueLength: number;
   speedKbps: number;
@@ -27,12 +28,15 @@ export interface TransferItem {
   id: string;
   track: Track;
   peerUser: string;
+  peerId?: string;
   type: 'download' | 'upload';
   status: 'queued' | 'transferring' | 'completed' | 'paused' | 'failed';
   progressPercent: number;
   speedBps: number;
   transferredBytes: number;
   etaSecs: number;
+  localPath?: string;
+  error?: string;
 }
 
 export interface RadioStationState {

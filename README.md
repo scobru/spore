@@ -49,10 +49,11 @@ Traditional P2P clients either rely on centralized indexing servers (like origin
 - **One-Click Album Download**: Batch queue an entire album or select individual tracks.
 
 ### 5. 📻 Spore Radio FM (Live Audio Broadcast Station)
-- **Personal P2P Radio Station**: Stream music continuously from your local folder or custom queue to Freenet peers.
-- **Heartbeat Presence Detection**: Emits a signed presence heartbeat every 25s with station metadata and `now_playing` track.
-- **Radica Live Cards**: Posts shared on Radica automatically show `🔴 LIVE NOW` with animated equalizer while broadcasting, or cleanly switch to `⚪ OFFLINE` when Spore is closed.
-- **4-Slot Ring Buffer**: Employs circular sliding overwrite (~240 KB max total network footprint), preventing any network storage bloat.
+- **1-Click Freenet Broadcast**: Click **Start Broadcast** to publish your station room to the local Freenet node (`127.0.0.1:7509`) via the `spore-radio-contract` WASM contract and automatically copy your `spore:radio:<roomId>` link.
+- **Zero-Copy-Paste Listener Flow**: Friends paste the `spore:radio:<roomId>` link into **Listen to a Friend's Radio** and click **Listen** — WebRTC SDP offer/answer negotiation happens automatically over Freenet, then audio streams peer-to-peer.
+- **Live Station & Track Updates**: Station metadata (`station_name`, `genre`, `dj_name`, `now_playing`, `live`) updates on Freenet as tracks change, and marks the room offline on stop.
+- **Radica Live Cards**: Compatible with `spore:radio:<roomId>` links in Radica.
+- **Manual WebRTC Fallback**: Optional collapsed fallback for LAN/direct SDP exchange without a Freenet node.
 
 ### 6. 🎵 Integrated Hi-Fi Audio Player
 - Docked bottom bar with waveform scrubbing, time remaining, volume control, and codec badge (`FLAC 24-bit`, `MP3 320k`).

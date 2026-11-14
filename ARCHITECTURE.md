@@ -140,6 +140,11 @@ Spore separates **Catalog Discovery** from **Data Transfer** to maintain high sp
   - **Self-Healing**: If nodes go offline, any client can reconstruct the missing shards and republish them with `repairBlob()`.
   - **100% Anonymous**: IP addresses are never revealed between peers.
 
+### 4.3 Spore Radio (`radio-contract` + WebRTC)
+- **Contract (`radio-contract/src/lib.rs` -> `src/wasm/radio_contract.wasm`)**: Keyed by UTF-8 `roomId` (e.g. `sp-...`). Holds `StationInfo` (`station_name`, `genre`, `dj_name`, `now_playing`, `live`, `ts`) and a bounded map of up to 16 `SignalEntry` records (`listener_id`, `joined_at`, `offer`, `answer`, `ts`) with a monotonic lattice merge (`join -> offer -> answer`).
+- **Broadcaster (`FreenetRadioBroadcaster` in `src/lib/freenetRadio.ts`)**: Publishes/subscribes to the room contract over `ws://127.0.0.1:7509/v1/contract/command`, automatically creates WebRTC offers (`createRadioOffer`) for joining listeners, and completes handshakes when answers arrive.
+- **Listener (`FreenetRadioListener` in `src/lib/freenetRadio.ts`)**: Joins by `spore:radio:<roomId>`, posts a `SignalEntry`, automatically answers the broadcaster's offer (`joinRadioOffer`), and plays the incoming peer-to-peer `MediaStream` in `<audio>`.
+
 ---
 
 ## 5. Security Model

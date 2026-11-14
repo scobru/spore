@@ -14,6 +14,8 @@
     "publish:freenet": "freenet publish --contract-type webapp docs/"
   },
   "dependencies": {
+    "@freenetorg/freenet-stdlib": "^0.4.0",
+    "@noble/hashes": "^2.4.0",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
     "lucide-react": "^1.72.0",

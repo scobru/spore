@@ -8,15 +8,18 @@ interface MySharesViewProps {
   shares: Track[];
   onSetShares: (tracks: Track[]) => void;
   onPlayTrack: (track: Track) => void;
+  onPublishCatalog: () => Promise<number>;
 }
 
 export const MySharesView: FC<MySharesViewProps> = ({
   shares,
   onSetShares,
   onPlayTrack,
+  onPublishCatalog,
 }) => {
   const [folderPath, setFolderPath] = useState('D:\\Music');
   const [isScanning, setIsScanning] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [scanMessage, setScanMessage] = useState('');
   const [publishedToFreenet, setPublishedToFreenet] = useState(false);
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
@@ -50,11 +53,19 @@ export const MySharesView: FC<MySharesViewProps> = ({
   const uniqueArtists = new Set(shares.map((t) => t.artist)).size;
   const uniqueAlbums = new Set(shares.map((t) => t.album)).size;
 
-  const handlePublishFreenet = () => {
-    setPublishedToFreenet(true);
-    setTimeout(() => {
-      alert(`Manifest generated successfully!\nPublished ${shares.length} tracks to your Freenet contract.\nConnected peers can now search and download your music.`);
-    }, 100);
+  const handlePublishFreenet = async () => {
+    setIsPublishing(true);
+    setScanMessage('Publishing catalog to Freenet P2P directory...');
+    try {
+      const count = await onPublishCatalog();
+      setPublishedToFreenet(true);
+      setScanMessage(`Catalog published on Freenet (${count} tracks). Peers can now search & download your music.`);
+    } catch (err: unknown) {
+      setPublishedToFreenet(false);
+      setScanMessage(`Freenet publish error: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (
@@ -84,16 +95,16 @@ export const MySharesView: FC<MySharesViewProps> = ({
 
         <div className="flex items-center gap-3">
           <button
-            onClick={handlePublishFreenet}
-            disabled={shares.length === 0}
-            className={`px-3 py-1.5 rounded flex items-center gap-2 text-xs font-semibold transition-colors cursor-pointer ${
+            onClick={() => void handlePublishFreenet()}
+            disabled={shares.length === 0 || isPublishing}
+            className={`px-3 py-1.5 rounded flex items-center gap-2 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 ${
               publishedToFreenet
                 ? 'bg-neutral-800 text-emerald-400 border border-emerald-500/40'
                 : 'bg-emerald-950 text-emerald-400 border border-emerald-800/80 hover:bg-emerald-900/60'
             }`}
           >
-            <Globe2 className="w-3.5 h-3.5" />
-            {publishedToFreenet ? 'Catalog Published on Freenet' : 'Publish Catalog on Freenet'}
+            <Globe2 className={`w-3.5 h-3.5 ${isPublishing ? 'animate-spin' : ''}`} />
+            {isPublishing ? 'Publishing...' : publishedToFreenet ? 'Catalog Published on Freenet' : 'Publish Catalog on Freenet'}
           </button>
         </div>
       </div>

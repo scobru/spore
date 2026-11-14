@@ -1,10 +1,14 @@
 import { useState, FC } from 'react';
-import { Search, Download, FolderSearch, Play, X, SlidersHorizontal, Check, Disc } from 'lucide-react';
+import { Search, Download, FolderSearch, Play, X, SlidersHorizontal, Check, Disc, RefreshCw } from 'lucide-react';
 import { SearchResult, Track } from '../types';
 
 interface SearchViewProps {
   results: SearchResult[];
   onSearch: (query: string) => void;
+  onSyncNetwork: () => Promise<void>;
+  isSyncingNetwork: boolean;
+  networkPeersCount: number;
+  networkTracksCount: number;
   onPlayTrack: (track: Track) => void;
   onDownloadTrack: (result: SearchResult) => void;
   onBrowseUser: (username: string) => void;
@@ -13,6 +17,10 @@ interface SearchViewProps {
 export const SearchView: FC<SearchViewProps> = ({
   results,
   onSearch,
+  onSyncNetwork,
+  isSyncingNetwork,
+  networkPeersCount,
+  networkTracksCount,
   onPlayTrack,
   onDownloadTrack,
   onBrowseUser,
@@ -111,8 +119,19 @@ export const SearchView: FC<SearchViewProps> = ({
           ))}
         </div>
 
-        <div className="text-[11px] font-mono text-neutral-400">
-          Results: <span className="text-emerald-400 font-semibold">{filteredResults.length}</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => void onSyncNetwork()}
+            disabled={isSyncingNetwork}
+            title="Fetch peer catalogs from Freenet"
+            className="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 text-emerald-400 border border-neutral-700 rounded text-[11px] font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <RefreshCw className={`w-3 h-3 ${isSyncingNetwork ? 'animate-spin' : ''}`} />
+            {isSyncingNetwork ? 'Syncing…' : `Sync Peers (${networkPeersCount} / ${networkTracksCount} tracks)`}
+          </button>
+          <div className="text-[11px] font-mono text-neutral-400">
+            Results: <span className="text-emerald-400 font-semibold">{filteredResults.length}</span>
+          </div>
         </div>
       </div>
 

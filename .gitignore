@@ -27,3 +27,9 @@ release
 # Pix Agent
 .pi/
 .pi-lens/
+.cache/
+
+# Rust build artifacts
+target/
+p2p-contract/target/
+radio-contract/target/

@@ -1,19 +1,25 @@
 import { FC } from 'react';
-import { Download, Upload, Pause, Play, Trash2, CheckCircle2, Clock, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
-import { TransferItem } from '../types';
+import { Download, Upload, Pause, Play, Trash2, CheckCircle2, Clock, ArrowDownCircle, ArrowUpCircle, Folder } from 'lucide-react';
+import { Track, TransferItem } from '../types';
 
 interface TransfersViewProps {
   transfers: TransferItem[];
+  downloadDir: string;
+  onChangeDownloadDir: (dir: string) => void;
   onTogglePause: (id: string) => void;
   onCancelTransfer: (id: string) => void;
   onClearCompleted: () => void;
+  onPlayTrack?: (track: Track) => void;
 }
 
 export const TransfersView: FC<TransfersViewProps> = ({
   transfers,
+  downloadDir,
+  onChangeDownloadDir,
   onTogglePause,
   onCancelTransfer,
   onClearCompleted,
+  onPlayTrack,
 }) => {
   const downloads = transfers.filter((t) => t.type === 'download');
   const uploads = transfers.filter((t) => t.type === 'upload');
@@ -65,14 +71,28 @@ export const TransfersView: FC<TransfersViewProps> = ({
           </div>
         </div>
 
-        <button
-          onClick={onClearCompleted}
-          disabled={!transfers.some((t) => t.status === 'completed')}
-          className="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-40 text-neutral-300 rounded text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          Clear completed
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-1.5 bg-neutral-950 border border-neutral-800 rounded px-2 py-1">
+            <Folder className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="text-[10px] text-neutral-500">Save to:</span>
+            <input
+              type="text"
+              value={downloadDir}
+              onChange={(e) => onChangeDownloadDir(e.target.value)}
+              className="bg-transparent text-[11px] text-neutral-300 w-48 focus:outline-none font-sans"
+              title="Download destination folder"
+            />
+          </div>
+
+          <button
+            onClick={onClearCompleted}
+            disabled={!transfers.some((t) => t.status === 'completed' || t.status === 'failed')}
+            className="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-40 text-neutral-300 rounded text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Clear finished
+          </button>
+        </div>
       </div>
 
       {/* Main Transfers List */}
@@ -142,9 +162,12 @@ export const TransfersView: FC<TransfersViewProps> = ({
                     </td>
                     <td className="py-2 px-3 text-center">
                       <span
+                        title={item.error || item.localPath || item.status}
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${
                           item.status === 'completed'
                             ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/60'
+                            : item.status === 'failed'
+                            ? 'bg-rose-950 text-rose-400 border border-rose-800/60'
                             : item.status === 'transferring'
                             ? 'bg-blue-950 text-blue-400 border border-blue-800/60 animate-pulse'
                             : item.status === 'paused'
@@ -159,7 +182,16 @@ export const TransfersView: FC<TransfersViewProps> = ({
                     </td>
                     <td className="py-2 px-3 text-center">
                       <div className="flex items-center justify-center gap-1.5">
-                        {item.status !== 'completed' && (
+                        {item.status === 'completed' && item.localPath && onPlayTrack && (
+                          <button
+                            onClick={() => onPlayTrack({ ...item.track, path: item.localPath! })}
+                            title="Play downloaded file"
+                            className="p-1 rounded bg-emerald-900/50 hover:bg-emerald-800 text-emerald-300 cursor-pointer"
+                          >
+                            <Play className="w-3 h-3 fill-current" />
+                          </button>
+                        )}
+                        {item.status !== 'completed' && item.status !== 'failed' && (
                           <button
                             onClick={() => onTogglePause(item.id)}
                             title={item.status === 'paused' ? 'Resume' : 'Pause'}
