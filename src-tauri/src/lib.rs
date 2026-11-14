@@ -1,5 +1,6 @@
 mod scanner;
 mod transfers;
+mod ws_proxy;
 
 use scanner::{scan_folder, hash_file_blake3, update_track_tags, TrackMetadata, UpdateTagPayload};
 use transfers::{
@@ -56,6 +57,11 @@ fn cancel_download_part(dest_dir: String, filename: String) -> Result<(), String
     cancel_part_impl(&dest_dir, &filename)
 }
 
+#[tauri::command]
+fn get_freenet_proxy_ws_url(target_url: String) -> Result<String, String> {
+    ws_proxy::get_proxy_ws_url(&target_url)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -68,7 +74,8 @@ pub fn run() {
             read_file_chunk,
             write_file_chunk,
             finalize_download,
-            cancel_download_part
+            cancel_download_part,
+            get_freenet_proxy_ws_url
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -185,16 +185,26 @@ type UpdateNotificationLike = {
   update?: { updateDataType?: number; updateData?: { state?: number[]; delta?: number[] } | null };
 };
 
-function openFreenetSocket(
+export async function resolveFreenetWsUrl(wsUrl: string): Promise<string> {
+  if (!wsUrl.startsWith("ws://")) return wsUrl;
+  try {
+    return await invoke<string>("get_freenet_proxy_ws_url", { targetUrl: wsUrl });
+  } catch {
+    return wsUrl;
+  }
+}
+
+async function openFreenetSocket(
   wsUrl: string,
   onNotify?: (n: UpdateNotificationLike) => void,
   onDrop?: (err: Error) => void
 ): Promise<FreenetWsApi> {
+  const effectiveUrl = await resolveFreenetWsUrl(wsUrl);
   return withTimeout(
     new Promise<FreenetWsApi>((resolve, reject) => {
       let opened = false;
       const api = new FreenetWsApi(
-        new URL(wsUrl),
+        new URL(effectiveUrl),
         {
           onContractPut: () => {},
           onContractGet: () => {},

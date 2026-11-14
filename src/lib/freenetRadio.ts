@@ -15,6 +15,7 @@ import { ContractCodeT } from "@freenetorg/freenet-stdlib/common";
 import { RelatedContractsT } from "@freenetorg/freenet-stdlib/client-request";
 import { blake3 } from "@noble/hashes/blake3.js";
 import radioWasmUrl from "../wasm/radio_contract.wasm?url";
+import { resolveFreenetWsUrl } from "./freenetP2p";
 import { completeRadioOffer, createRadioOffer, joinRadioOffer } from "./webrtcSignal";
 
 export interface StationInfo {
@@ -138,15 +139,16 @@ function parseNotificationState(n: UpdateNotificationLike): RadioRoomState | nul
   }
 }
 
-function openFreenetSocket(
+async function openFreenetSocket(
   onNotify: (n: UpdateNotificationLike) => void,
   onDrop?: (err: Error) => void
 ): Promise<FreenetWsApi> {
+  const effectiveUrl = await resolveFreenetWsUrl(FREENET_WS_URL);
   return withTimeout(
     new Promise<FreenetWsApi>((resolve, reject) => {
       let opened = false;
       const api = new FreenetWsApi(
-        new URL(FREENET_WS_URL),
+        new URL(effectiveUrl),
         {
           onContractPut: () => {},
           onContractGet: () => {},
