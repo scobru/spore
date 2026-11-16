@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spore — Sovereign P2P music on Freenet</title>
+<meta name="description" content="Sovereign P2P music and file digging on Freenet. No central servers.">
+<style>
+:root{--bg:#0b0f0c;--fg:#e8efe9;--mut:#8da294;--card:#121a14;--line:#1f2d23;--acc:#22c55e}
+@media(prefers-color-scheme:light){:root{--bg:#f6faf7;--fg:#0e1a12;--mut:#4b6355;--card:#fff;--line:#d6e4da;--acc:#15803d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.w{max-width:960px;margin:0 auto;padding:0 20px}
+header{padding:72px 0 48px;text-align:center}
+.logo{font-size:56px;line-height:1}
+h1{font-size:clamp(34px,6vw,56px);margin:12px 0 8px;letter-spacing:-.02em}
+.tag{color:var(--mut);font-size:clamp(17px,2.4vw,21px);max-width:620px;margin:0 auto 28px}
+.btn{display:inline-block;padding:12px 22px;border-radius:10px;font-weight:600;text-decoration:none;margin:4px;border:1px solid var(--acc)}
+.p{background:var(--acc);color:#04130a}
+.s{color:var(--acc)}
+h2{font-size:26px;margin:56px 0 20px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.c h3{margin:0 0 6px;font-size:18px}
+.c p{margin:0;color:var(--mut);font-size:15px}
+pre{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;overflow:auto;font-size:14px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.note{color:var(--mut);font-size:14px}
+footer{margin:64px 0 40px;padding-top:24px;border-top:1px solid var(--line);color:var(--mut);font-size:14px;text-align:center}
+a{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="w">
+<header>
+  <div class="logo">🍄</div>
+  <h1>Spore</h1>
+  <p class="tag">Sovereign P2P music and file digging on Freenet. No central servers, no accounts, no algorithm.</p>
+  <a class="btn p" href="https://github.com/scobru/spore" target="_blank" rel="noopener">Get Spore</a>
+  <a class="btn s" href="#features">Features</a>
+</header>
+
+<h2 id="features">What it does</h2>
+<div class="g">
+  <div class="c"><h3>🔍 Search</h3><p>Dense Soulseek-style results: format, bitrate, size, peer, speed. Filter FLAC, MP3, WAV and extras. Double-click to download.</p></div>
+  <div class="c"><h3>⚡ Transfers</h3><p>Direct WebRTC between peers. Pause, resume, cancel. Auto-resume when a peer comes back.</p></div>
+  <div class="c"><h3>📁 Shares</h3><p>Fast Rust scanner reads tags and BLAKE3-hashes your library. Your manifest is announced on Freenet.</p></div>
+  <div class="c"><h3>👥 Browse peers</h3><p>Open a peer's folder tree. Queue a whole album in one click.</p></div>
+  <div class="c"><h3>📻 Spore Radio</h3><p>Start a broadcast, share a <code>spore:radio:&lt;roomId&gt;</code> link, friends listen peer-to-peer.</p></div>
+  <div class="c"><h3>✏️ Tag editor</h3><p>Edit ID3 and Vorbis tags in place. Hash refreshed on save.</p></div>
+</div>
+
+<h2>Why Spore</h2>
+<div class="g">
+  <div class="c"><h3>Zero central servers</h3><p>Catalogs live in Freenet state contracts, not on someone's index server.</p></div>
+  <div class="c"><h3>Tiny footprint</h3><p>Tauri v2 and Rust. About 15 MB binary, about 40 MB idle RAM.</p></div>
+  <div class="c"><h3>Music only</h3><p>Audio, cover art, booklets, cue and rip logs. Executables are rejected.</p></div>
+  <div class="c"><h3>Two privacy modes</h3><p>Direct P2P for speed (pair with a VPN to hide your IP), or <code>freenet-blob</code> sharded storage for anonymity.</p></div>
+</div>
+
+<h2>Build it</h2>
+<pre><code>git clone https://github.com/scobru/spore.git
+cd spore
+npm install
+npm run tauri dev</code></pre>
+<p class="note">Needs Node 20+, Rust stable, a C++ toolchain and a running Freenet node on <code>127.0.0.1:7509</code>. See the README for exact steps.</p>
+
+<footer>Spore · MIT license · Published on Freenet · <a href="https://github.com/scobru/spore" target="_blank" rel="noopener">Source</a></footer>
+</div>
+</body>
+</html>
